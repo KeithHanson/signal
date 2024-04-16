@@ -229,8 +229,6 @@ class SpaceShip(Vehicle, Object):
     # subsystems?
     # energy properties for subsystems?
 
-    _content_types = ("ship", )
-
     def thrust(direction):
         if self.pilot:
             self.pilot.msg("Zoooom!")
