@@ -12,6 +12,8 @@ inheritance.
 """
 
 from evennia.objects.objects import DefaultObject
+from evennia import Command, CmdSet, CmdSet, AttributeProperty
+
 
 
 class ObjectParent:
@@ -173,3 +175,167 @@ class Object(ObjectParent, DefaultObject):
     """
 
     pass
+
+class Vehicle(Object):
+    fuel = AttributeProperty(0)
+    armor = AttributeProperty(0)
+    pilot = AttributeProperty(None)
+
+    powered = AttributeProperty(False)
+    
+    subsystems = AttributeProperty([])
+
+    def get_display_desc(self, looker, **kwargs):
+        if self.powered:
+            return self.db.desc + " The vehicle hums quietly, powered and ready for flight."
+        else:
+            return self.db.desc + " The vehicle sits silently, powered off, awaiting it's pilot."
+
+    def at_object_creation(self):
+        self.cmdset.add_default('typeclasses.objects.VehicleEntryCmdSet')
+
+    def at_pilot_enter(self, pilot):
+        self.location.msg_contents("$You() $conj(open) the hatch and $conj(enter) the vehicle, the seal closing with a hiss.", from_obj=pilot)
+
+        self.pilot = pilot
+        pilot.move_to(self)
+
+        self.pilot.cmdset.add("typeclasses.objects.VehiclePilotingCmdSet")
+
+
+    def at_pilot_exit(self, pilot):
+
+        self.pilot = None
+
+        self.msg_contents("The vehicle door opens with a hiss as the airlock unseals, and $You() $conj(exit) the vehicle.", from_obj=pilot)
+        self.location.msg_contents("The vehicle door opens with a hiss as the airlock unseals, and $You() $conj(exit) the vehicle.", from_obj=pilot)
+
+        pilot.move_to(self.location)
+
+        pilot.cmdset.delete("typeclasses.objects.VehiclePilotingCmdSet")
+
+    def at_power_on(self):
+        self.powered = True
+        self.pilot.msg("You feel the engines rumble to life. Your HUD begins to boot, and blinking lights spring to life.")
+
+        self.location.msg("You feel a rumble in your chest as {key} powers up and begins levitating.")
+
+    def at_power_off(self):
+        self.powered = False
+        self.location.msg("As the vehicle powers off, it lands softly on the ground.")
+        self.pilot.msg("You feel the vehicle land softly and watch as your subsystems power off.")
+
+class SpaceShip(Vehicle, Object):
+    # subsystems?
+    # energy properties for subsystems?
+
+    _content_types = ("ship", )
+
+    def thrust(direction):
+        if self.pilot:
+            self.pilot.msg("Zoooom!")
+        pass
+
+class CmdPilotVehicle(Command):
+    """
+    Begin piloting a vehicle.
+
+    Usage:
+        pilot ship
+
+    If you have the proper permissions, you will climb into the vehicle and can begin controlling it.
+    """
+
+    key = "pilot"
+    aliases = ["get in", "drive", "fly"]
+    locks = "cmd:all()"
+    help_category = "Piloting"
+
+    def parse(self):
+        self.target = self.caller.search(self.args.strip())
+
+    def func(self):
+        caller = self.caller
+
+        if not self.target or self.target == "here":
+            caller.msg("Pilot what?")
+        else:
+            target = caller.search(self.target)
+            if not target:
+                caller.msg("Couldn't find that to pilot.")
+
+            target.at_pilot_enter(caller)
+
+class CmdDisembarkVehicle(Command):
+    """
+    Exit the vehicle you are in.
+
+    Usage:
+        disembark
+
+    Get out of the vehicle, exiting into the location of the vehicle itself.
+    """
+
+    key = "disembark"
+    aliases = ["get out", "leave", "exit"]
+    locks = "cmd:all()"
+    help_category = "Piloting"
+
+    def parse(self):
+        pass
+
+    def func(self):
+        caller = self.caller
+        ship = caller.location
+
+        ship.at_pilot_exit(caller)
+
+class CmdPowerOnVehicle(Command):
+    """
+    Power up the vehicle.
+
+    Usage:
+        power on
+
+    """
+
+    key = "power on"
+    aliases = ["boot up", "boot", "turn on", "on"]
+    locks = "cmd:all()"
+    help_category = "Piloting"
+
+    def func(self):
+        caller = self.caller
+        ship = self.caller.location
+        ship.at_power_on()
+
+
+class CmdPowerOffVehicle(Command):
+    """
+    Power off the vehicle.
+
+    Usage:
+        power off
+
+    """
+
+    key = "power off"
+    aliases = ["shutdown", "shut off", "turn off", "off"]
+    locks = "cmd:all()"
+    help_category = "Piloting"
+
+    def func(self):
+        caller = self.caller
+        ship = self.caller.location
+        ship.at_power_off()
+
+
+class VehiclePilotingCmdSet(CmdSet):
+    def at_cmdset_creation(self):
+        self.add(CmdDisembarkVehicle())
+        self.add(CmdPowerOnVehicle())
+        self.add(CmdPowerOffVehicle())
+
+class VehicleEntryCmdSet(CmdSet):
+    def at_cmdset_creation(self):
+        self.add(CmdPilotVehicle())
