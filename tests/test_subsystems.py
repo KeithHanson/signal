@@ -136,6 +136,8 @@ class TestSubsystems(EvenniaTest):
 
         self.default_battery.at_tick()
         self.assertEqual(self.default_battery.storedEnergy, 0)
+        self.assertEqual(self.default_engine.storedEnergy, 9)
+        self.assertEqual(self.default_radar.storedEnergy, 9)
 
         self.default_engine.at_tick()
         self.assertEqual(self.default_engine.storedEnergy, 8)
