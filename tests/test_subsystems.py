@@ -1,15 +1,21 @@
 from evennia.utils import create
 from evennia.utils.test_resources import EvenniaTest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from typeclasses.subsystems.base import Subsystem, DefaultCore, DefaultBattery, DefaultRadar, DefaultEngine
 from typeclasses.subsystems.reactors import DefaultReactor
 from typeclasses.objects import Object
 
+from evennia import TICKER_HANDLER as tickerhandler
+
 class TestSubsystems(EvenniaTest):
     def setUp(self):
         """Called before every test method"""
         super().setUp()
+
+        tickerhandler.add = MagicMock(name='add')
+        tickerhandler.remove = MagicMock(name='remove')
+
         self.basic_room = create.create_object( Object, key="room" )
 
         self.base_subsystem = create.create_object( Subsystem, key="base_subsystem" )
@@ -76,9 +82,13 @@ class TestSubsystems(EvenniaTest):
 
     def power_all_on(self):
         # Hack some fuel in
-        self.default_reactor.storedFuel = 100
-        self.default_reactor.energyProvidedPerTick = 10
         self.default_reactor.fuelConsumedPerTickPerLevel = 1
+        self.default_reactor.storedFuel = 100
+
+        self.default_reactor.energyProvidedPerTick = 10
+        self.default_reactor.energyTransferredPerTick = 10
+
+        self.default_battery.energyTransferredPerTick = 5
 
         self.default_core.at_power_on()
 
@@ -97,9 +107,37 @@ class TestSubsystems(EvenniaTest):
         self.assertEqual(self.default_reactor.linkedSubsystems, [self.default_battery])
         self.assertEqual(self.default_battery.linkedSubsystems, [self.default_engine, self.default_radar])
 
-    @patch("evennia.TICKER_HANDLER")
-    def test_linked_ticks(self, mock_tickerhandler):
+    def test_linked_ticks(self):
         self.link_all_defaults()
         self.power_all_on()
 
+        # simulate the ticks
         self.default_core.at_tick()
+        self.default_reactor.at_tick()
+
+        self.assertEqual(self.default_battery.storedEnergy, 10)
+
+        self.default_battery.at_tick()
+
+        self.assertEqual(self.default_battery.storedEnergy, 0)
+        self.assertEqual(self.default_engine.storedEnergy, 5)
+        self.assertEqual(self.default_radar.storedEnergy, 5)
+
+        self.default_engine.at_tick()
+        self.assertEqual(self.default_engine.storedEnergy, 4)
+
+        self.default_radar.at_tick()
+        self.assertEqual(self.default_radar.storedEnergy, 4)
+
+        #simulate the next ones
+        self.default_core.at_tick()
+        self.default_reactor.at_tick()
+        self.assertEqual(self.default_battery.storedEnergy, 10)
+
+        self.default_battery.at_tick()
+        self.assertEqual(self.default_battery.storedEnergy, 0)
+
+        self.default_engine.at_tick()
+        self.assertEqual(self.default_engine.storedEnergy, 8)
+        self.default_radar.at_tick()
+        self.assertEqual(self.default_radar.storedEnergy, 8)
