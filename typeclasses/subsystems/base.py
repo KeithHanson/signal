@@ -65,7 +65,7 @@ class Subsystem(Object):
     def generate_energy(self):
         fuel_draw = self.fuelConsumedPerTickPerLevel * self.assignedEnergyLevel
 
-        if self.storedFuel > fuel_draw:
+        if self.storedFuel >= fuel_draw:
             self.storedFuel = self.storedFuel - fuel_draw
             
             amount_to_store = self.energyProvidedPerTick if self.energyProvidedPerTick < self.energyCapacity - self.storedEnergy else self.energyCapacity - self.storedEnergy
