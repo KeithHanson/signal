@@ -1,6 +1,12 @@
-from evennia.objects.objects import DefaultObject
-from evennia import Command, CmdSet, CmdSet, AttributeProperty
+from evennia import CmdSet, AttributeProperty
 from evennia import TICKER_HANDLER as tickerhandler
+
+from typeclasses.objects import Object
+from commands.command import Command
+from typeclasses.subsystems.base import Subsystem
+
+import evennia
+
 
 # TODO: Provide new commands at power on and remove them at power off
 class Vehicle(Object):
@@ -11,6 +17,26 @@ class Vehicle(Object):
     
     aiCore = AttributeProperty(None)
 
+    def update_prompt(self, caller):
+        ship = caller.location
+
+        ship.pilot.msg(prompt=self.get_prompt_text())
+
+    def get_prompt_text(self):
+        powered_color = "|g" if self.powered else "|r"
+        powered_text = "on" if self.powered else "off"
+        sub_texts = []
+
+        for item in self.contents:
+            if isinstance(item, Subsystem):
+                system_text = item.get_prompt_text()
+
+                sub_texts.append("[" + system_text + "]|n")
+
+        full_subsystems_text = ' '.join(sub_texts)
+
+        return f"{self.name} {powered_color}{powered_text}|n {full_subsystems_text}] >\n"
+
     def get_display_desc(self, looker, **kwargs):
         if self.powered:
             return self.db.desc + " The vehicle hums quietly, powered and ready for flight. " + "Subsystems: " + str(len(self.aiCore.linkedSubsystems))
@@ -20,18 +46,18 @@ class Vehicle(Object):
     def at_object_creation(self):
         self.cmdset.add_default('typeclasses.objects.VehicleEntryCmdSet')
 
-        core = evennia.create_object('typeclasses.objects.DefaultCore', key="stock_core", location=self)
+        core = evennia.create_object('subsystems.base.DefaultCore', key="stock_core", location=self)
 
-        reactor = evennia.create_object('typeclasses.objects.DefaultReactor', key="stock_reactor", location=self)
+        reactor = evennia.create_object('subsystems.base.DefaultReactor', key="stock_reactor", location=self)
         core.link_to(reactor)
 
-        battery = evennia.create_object('typeclasses.objects.DefaultBattery', key="stock_battery", location=self)
+        battery = evennia.create_object('subsystems.base.DefaultBattery', key="stock_battery", location=self)
         reactor.link_to(battery)
 
-        engine = evennia.create_object('typeclasses.objects.DefaultEngine', key="stock_engine", location=self)
+        engine = evennia.create_object('subsystems.base.DefaultEngine', key="stock_engine", location=self)
         battery.link_to(engine)
 
-        radar = evennia.create_object('typeclasses.objects.DefaultRadar', key="stock_radar", location=self)
+        radar = evennia.create_object('subsystems.base.DefaultRadar', key="stock_radar", location=self)
         battery.link_to(radar)
 
         self.aiCore = core
@@ -47,7 +73,6 @@ class Vehicle(Object):
 
 
     def at_pilot_exit(self, pilot):
-
         self.pilot = None
 
         self.msg_contents("The vehicle door opens with a hiss as the airlock unseals, and $You() $conj(exit) the vehicle.", from_obj=pilot)
@@ -57,19 +82,28 @@ class Vehicle(Object):
 
         pilot.cmdset.delete("typeclasses.objects.VehiclePilotingCmdSet")
 
+    def chained_power(self, subsys, powerOn):
+        if powerOn:
+            subsys.at_power_on()
+        else:
+            subsys.at_power_off()
+
+        for linked in subsys.linkedSubsystems:
+            self.chained_power(linked, powerOn)
+
     def at_power_on(self):
         self.powered = True
         self.pilot.msg("You feel the engines rumble to life. Your HUD begins to boot, and blinking lights spring to life.")
 
         self.location.msg("You feel a rumble in your chest as {key} powers up and begins levitating.")
+        self.chained_power(self.aiCore, True)
 
-        self.core.at_power_on()
 
     def at_power_off(self):
         self.powered = False
         self.location.msg("As the vehicle powers off, it lands softly on the ground.")
         self.pilot.msg("You feel the vehicle land softly and watch as your subsystems power off.")
-        self.core.at_power_off()
+        self.chained_power(self.aiCore, False)
 
     def at_object_delete(self):
         for cur_system in self.contents:

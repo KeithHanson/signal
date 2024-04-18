@@ -12,11 +12,12 @@ inheritance.
 """
 
 from evennia.objects.objects import DefaultObject
-from evennia import Command, CmdSet, CmdSet, AttributeProperty
+
+from evennia import CmdSet, AttributeProperty
 from evennia import TICKER_HANDLER as tickerhandler
 import evennia
 
-
+from commands.command import Command
 
 class ObjectParent:
     """
@@ -179,6 +180,31 @@ class Object(ObjectParent, DefaultObject):
     pass
 
 
+class CmdPilotLook(Command):
+    """
+    Refresh the prompt with all the stats about your vehicle.
+
+    Usage:
+        status
+    """
+
+    key = "status"
+    alias = ["stats", "stat"]
+
+    locks = "cmd:all()"
+
+    help_category = "Piloting"
+
+    def parse(self):
+        if self.args.strip() == "":
+            self.target = self.caller.search("here")
+        else:
+            self.target = self.caller.search(self.args.strip())
+        pass
+
+    def func(self):
+        self.caller.msg(self.caller.location.at_desc(looker=self.caller))
+        pass
 
 class CmdPilotVehicle(Command):
     """
@@ -196,7 +222,11 @@ class CmdPilotVehicle(Command):
     help_category = "Piloting"
 
     def parse(self):
-        self.target = self.caller.search(self.args.strip())
+        if self.args.strip() == "":
+            self.target = self.caller.search("here")
+        else:
+            self.target = self.caller.search(self.args.strip())
+        pass
 
     def func(self):
         caller = self.caller
@@ -279,6 +309,7 @@ class VehiclePilotingCmdSet(CmdSet):
         self.add(CmdDisembarkVehicle())
         self.add(CmdPowerOnVehicle())
         self.add(CmdPowerOffVehicle())
+        self.add(CmdPilotLook())
 
 class VehicleEntryCmdSet(CmdSet):
     def at_cmdset_creation(self):

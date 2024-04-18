@@ -30,6 +30,12 @@ class Subsystem(Object):
 
     powered = AttributeProperty(default=False)
 
+    def get_prompt_text(self):
+        sub_powered_color = "|g" if self.powered else "|r"
+        stored_fuel_str = "(F" + str(self.storedFuel) + ") " if self.storedFuel > 0 else ""
+        stored_energy_str = "(E" + str(self.storedEnergy) + ")"
+        return sub_powered_color + self.name + ":" + str(self.assignedEnergyLevel) + stored_fuel_str + stored_energy_str
+
     def link_to(self, receiver):
         if self.linkedSubsystems == None:
             self.linkedSubsystems = []
@@ -61,8 +67,10 @@ class Subsystem(Object):
 
         if self.storedFuel > fuel_draw:
             self.storedFuel = self.storedFuel - fuel_draw
+            
+            amount_to_store = self.energyProvidedPerTick if self.energyProvidedPerTick < self.energyCapacity - self.storedEnergy else self.energyCapacity - self.storedEnergy
 
-            self.storedEnergy = self.storedEnergy + self.energyProvidedPerTick * self.assignedEnergyLevel
+            self.storedEnergy = self.storedEnergy + amount_to_store
         else:
             self.at_power_off()
             
@@ -70,8 +78,10 @@ class Subsystem(Object):
             pass
 
     def transfer_energy(self, receiver):
-        if self.storedEnergy >= self.energyTransferredPerTick:
-            amount_to_transfer = self.energyTransferredPerTick
+        if self.powered:
+            amount_to_transfer = self.energyTransferredPerTick if self.energyTransferredPerTick < receiver.energyCapacity - receiver.storedEnergy else receiver.energyCapacity - receiver.storedEnergy
+            if amount_to_transfer > self.storedEnergy:
+                amount_to_transfer = self.storedEnergy
 
             self.storedEnergy = self.storedEnergy - amount_to_transfer 
 
@@ -80,17 +90,17 @@ class Subsystem(Object):
         else:
             pass
 
-
-
     def consume_energy(self):
         if self.powered:
             power_draw = self.energyConsumedPerTickPerLevel * self.assignedEnergyLevel
 
-            if self.storedEnergy > power_draw:
+            if self.storedEnergy >= power_draw:
                 self.storedEnergy = self.storedEnergy - power_draw
                 self.at_consume_energy()
             else:
-                self.location.msg_contents(f"{self.name} falters as it cannot draw enough power.")
+                if power_draw > 0:
+                    self.location.msg_contents(f"{self.name} falters as it cannot draw enough power. Stored Energy: {self.storedEnergy} Power Draw: {power_draw}")
+                    self.at_power_off()
 
     # Override in each type of module to do the things.
     def at_consume_energy(self):
@@ -100,13 +110,18 @@ class Subsystem(Object):
         tickerhandler.add(1, self.at_tick)
         self.powered = True
         self.assignedEnergyLevel = 1
-        self.location.msg_contents(f"{self} Powered on.")
+        self.location.update_prompt(self.location.pilot)
 
     def at_power_off(self):
-        tickerhandler.remove(1, self.at_tick)
+        try:
+            tickerhandler.remove(1, self.at_tick)
+        except Exception as e:
+            pass
+
         self.powered = False
         self.assignedEnergyLevel = 0
-        self.location.msg_contents(f"{self} Powered off.")
+        self.storedEnergy = 0
+        self.location.update_prompt(self.location.pilot)
 
 class DefaultEngine(Subsystem):
     energyConsumedPerTickPerLevel = AttributeProperty(default=1)
@@ -118,14 +133,23 @@ class DefaultCore(Subsystem):
     energyConsumedPerTickPerLevel = AttributeProperty(default=0)
     name = "Stock AI Core"
 
-class DefaultRadar(Subsystem):
-    energyConsumedPerTickPerLevel = AttributeProperty(default=1)
-    name = "Stock Radar"
+class DefaultReactor(Subsystem):
+    energyProvidedPerTick = AttributeProperty(default=10)
+    energyTransferredPerTick = AttributeProperty(default=10)
+    energyConsumedPerTickPerLevel = AttributeProperty(default=0)
+    fuelConsumedPerTickPerLevel = AttributeProperty(default=1)
+    storedFuel = AttributeProperty(default=30)
+
+    def at_object_creation(self):
+        self.name = "Stock Reactor"
 
 class DefaultBattery(Subsystem):
     name = "Stock Battery"
-    energyCapacity = AttributeProperty(default=1000)
+    energyCapacity = AttributeProperty(default=30)
     energyConsumedPerTickPerLevel = AttributeProperty(default=0)
-    energyTransferredPerTick = AttributeProperty(default=0)
+    energyTransferredPerTick = AttributeProperty(default=5)
 
+class DefaultRadar(Subsystem):
+    energyConsumedPerTickPerLevel = AttributeProperty(default=1)
+    name = "Stock Radar"
 

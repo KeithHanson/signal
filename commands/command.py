@@ -30,7 +30,12 @@ class Command(BaseCommand):
     #     - at_post_cmd(): Extra actions, often things done after
     #         every command, like prompts.
     #
-    pass
+
+    def at_post_cmd(self):
+        caller = self.caller
+
+        if caller.location.db.pilot != None:
+            self.caller.location.update_prompt(caller)
 
 
 # -------------------------------------------------------------

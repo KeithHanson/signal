@@ -2,8 +2,7 @@ from evennia.utils import create
 from evennia.utils.test_resources import EvenniaTest
 from unittest.mock import patch, MagicMock
 
-from typeclasses.subsystems.base import Subsystem, DefaultCore, DefaultBattery, DefaultRadar, DefaultEngine
-from typeclasses.subsystems.reactors import DefaultReactor
+from typeclasses.subsystems.base import Subsystem, DefaultCore, DefaultBattery, DefaultRadar, DefaultEngine, DefaultReactor
 from typeclasses.objects import Object
 
 from evennia import TICKER_HANDLER as tickerhandler
