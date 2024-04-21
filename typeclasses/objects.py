@@ -408,9 +408,6 @@ class CmdRadarPulse(Command):
             caller.msg("Pulsing your radar while docked is dangerous.")
         else:
             radar = caller.search("radar")
-            print(radar)
-            print("----")
-            print(caller.location.contents)
             if not radar:
                 caller.msg("Do you have a radar installed?")
             else:
@@ -470,7 +467,7 @@ class SpaceRoom(DefaultRoom):
 
 
     def render_row(self, row_y, origin_x, nearby):
-        output = f"{row_y} | "
+        output = f"{row_y:+05} | "
         empty_space = ". "
 
         for i in range(origin_x - 5,origin_x + 5 + 1):
@@ -498,8 +495,8 @@ class SpaceRoom(DefaultRoom):
         for i in range(origin_y - 5, origin_y + 5 + 1):
             rows.append(self.render_row(i, origin_x, nearby))
 
-        rows.append("    ----------------------")
-        rows.append(f"             x:{origin_x}")
+        rows.append("      -----------------------")
+        rows.append(f"               x:{origin_x:+05}")
         rows.append("")
 
         return "\n".join(rows)

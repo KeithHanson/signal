@@ -174,6 +174,6 @@ class DefaultRadar(Subsystem):
             self.storedEnergy -= power_draw
             # Basic implementation, render the map perfectly from the space_room
             caller.msg(space_room.render_map(caller))
-            caller.msg("You feel a brief burst of electrical energy as your radar pulses.")
+            caller.msg("You feel a brief burst of electrical energy as your radar pulses and its capacitors drain.")
         else:
             caller.msg("Your radar doesn't have enough energy to pulse yet.")
