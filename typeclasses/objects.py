@@ -30,7 +30,6 @@ class ObjectParent:
 
     """
 
-
 class Object(ObjectParent, DefaultObject):
     """
     This is the root typeclass object, implementing an in-game Evennia

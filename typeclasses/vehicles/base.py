@@ -2,7 +2,6 @@ from evennia import CmdSet, AttributeProperty
 from evennia import TICKER_HANDLER as tickerhandler
 
 from typeclasses.objects import Object
-from commands.command import Command
 from typeclasses.subsystems.base import Subsystem
 
 import evennia

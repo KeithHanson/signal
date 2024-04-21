@@ -1,8 +1,8 @@
 % time steps into the future to calculate
-time(1..2).
+time(1).
 
 %   (B, Ix, Iy, IVx, IVy, Fx, Fy, M, T)
-%body(1, 0,  0,  0,   0,   1,  0,  1, 0).
+body(1, 0,  0,  0,   0,   1,  0,  1, 0).
 %body(2, 0,  0,  0,   0,   0,  1,  1, 0).
 
 % consolidated terms for input
@@ -42,7 +42,7 @@ position_y(B, Py, 0) :- initial_position_y(B, Py), body(B).
 body(B, T, Px, Py, Vx, Vy, M) :- body(B), time(T), position_x(B, Px, T), position_y(B, Py, T), velocity_x(B, Vx, T), velocity_y(B, Vy, T), mass(B, M).
 
 % just the basics for output
-time_body_position(T, B, Px, Py) :- body(B), time(T), position_x(B, Px, T), position_y(B, Py, T).
+time_body_position(T, B, Px, Py) :- body(B), time(T), position_x(B, Px, T), position_y(B, Py, T), T > 0.
 
 % Output the results for each time, body, and position
 #show time_body_position/4.
