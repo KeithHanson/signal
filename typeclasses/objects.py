@@ -14,10 +14,14 @@ inheritance.
 from evennia.objects.objects import DefaultObject, DefaultRoom
 
 from evennia import CmdSet, AttributeProperty
+from evennia.typeclasses.attributes import NAttributeProperty
 from evennia import TICKER_HANDLER as tickerhandler
 import evennia
 
 from commands.command import Command
+
+# Pearl clutch! I know, I re-opened the class. I'm a dirty rubyist at heart. 
+DefaultRoom.newtonian_data = NAttributeProperty(default={"x": 0, "y": 0, "Fx": 0, "Fy": 0, "Ax": 0, "Ay": 0})
 
 class ObjectParent:
     """
@@ -29,6 +33,8 @@ class ObjectParent:
     take precedence.
 
     """
+    newtonian_data = NAttributeProperty(default={"x": 0, "y": 0, "Fx": 0, "Fy": 0, "Ax": 0, "Ay": 0})
+
 
 class Object(ObjectParent, DefaultObject):
     """
@@ -322,7 +328,9 @@ class CmdPilotLaunch(Command):
         dock = ship.location.search("dock")
 
         if dock:
-            ship.nattributes.pos = dock.location.nattributes.pos
+            ship.newtonian_data["x"] = dock.location.newtonian_data["x"]
+            ship.newtonian_data["y"] = dock.location.newtonian_data["y"]
+
             ship.move_to(dock.exit_room)
             ship.msg_contents("Your back gets pressed into your seat as the ship autopilotes out of the dock and into space.")
 
@@ -341,7 +349,66 @@ class VehicleEntryCmdSet(CmdSet):
         self.add(CmdPilotVehicle())
 
 class SpaceRoom(DefaultRoom):
-    pass
+    width = AttributeProperty(default=1000)
+    height = AttributeProperty(default=1000)
+
+    def item_nearby(self, item, x, y):
+        return item.newtonian_data["x"] <= x + 5 and item.newtonian_data["x"] >= x - 5 and item.newtonian_data["y"] <= y + 5 and item.newtonian_data["y"] >= y - 5
+
+    def get_contents_near_position(self, x, y):
+        nearby = []
+        for item in self.contents:
+            if self.item_nearby(item, x, y):
+                nearby.append(item)
+
+        return nearby
+
+    def symbol_for_obj(self, obj):
+        pass
+
+    def objects_here(self, x, y, nearby):
+        objects = []
+        for item in nearby:
+            if item.newtonian_data["x"] == x and item.newtonian_data["y"] == y:
+                objects.append(item)
+
+        return objects
+
+
+    def render_row(self, row_y, origin_x, nearby):
+        output = f"{row_y} | "
+        empty_space = ". "
+
+        for i in range(origin_x - 5,origin_x + 5 + 1):
+            objects_at_location = self.objects_here(i, row_y, nearby)
+            if len(objects_at_location) > 0:
+                output += "@ "
+            else:
+                output += empty_space
+
+        return output
+
+    def render_map(self, caller=None):
+        if caller == None:
+            return None
+
+        origin_x = caller.location.newtonian_data["x"]
+        origin_y = caller.location.newtonian_data["y"]
+
+        # get contents
+        nearby = self.get_contents_near_position(origin_x, origin_y)
+
+        rows = []
+
+        rows.append("")
+        for i in range(origin_y - 5, origin_y + 5 + 1):
+            rows.append(self.render_row(i, origin_x, nearby))
+
+        rows.append("    ----------------------")
+        rows.append(f"             x:{origin_x}")
+        rows.append("")
+
+        return "\n".join(rows)
 
 class SpaceRoomDock(Object):
     exit_room = AttributeProperty(default=None)

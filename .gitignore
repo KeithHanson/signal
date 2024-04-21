@@ -54,3 +54,6 @@ nosetests.xml
 
 # VSCode config
 .vscode
+
+prolog/output.txt
+prolog/testing.pl

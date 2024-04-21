@@ -2,7 +2,7 @@
 time(1).
 
 %   (B, Ix, Iy, IVx, IVy, Fx, Fy, M, T)
-body(1, 0,  0,  0,   0,   1,  0,  1, 0).
+%body(1, 0,  0,  0,   0,   1,  0,  1, 0).
 %body(2, 0,  0,  0,   0,   0,  1,  1, 0).
 
 % consolidated terms for input

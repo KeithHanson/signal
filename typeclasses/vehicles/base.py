@@ -35,7 +35,6 @@ class Vehicle(Object):
         full_subsystems_text = ' '.join(sub_texts)
 
         position_string = ""
-        print(self)
         if self.nattributes.get("pos") != None:
             position_string = f" x:{self.nattributes.pos['x']},y:{self.nattributes.pos['y']}"
 

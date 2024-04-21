@@ -27,7 +27,7 @@ class TestSubsystems(EvenniaCommandTest):
         self.default_engine = self.default_battery.linkedSubsystems[0]
         self.default_radar = self.default_battery.linkedSubsystems[1]
 
-        print(self.call( cmdobj=CmdPilotVehicle(), input_args="ship"))
+        self.call( cmdobj=CmdPilotVehicle(), input_args="ship")
 
     def test_default_reactor(self):
         self.assertEqual( self.default_reactor.energyProvidedPerTick, 10 )
