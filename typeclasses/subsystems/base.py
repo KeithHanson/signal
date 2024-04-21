@@ -30,11 +30,10 @@ class Subsystem(Object):
 
     powered = AttributeProperty(default=False)
 
-    provides_cmdset_named = AttributeProperty(default=None)
+    provides_cmdset_named = None
 
     def at_object_creation(self):
-        if self.provides_cmdset_named != None:
-            self.cmdset.add_default(provides_cmdset_named)
+        pass
 
     def get_prompt_text(self):
         sub_powered_color = "|g" if self.powered else "|r"
@@ -118,9 +117,15 @@ class Subsystem(Object):
         self.assignedEnergyLevel = 1
         self.location.update_prompt(self.location.pilot)
 
+        if self.provides_cmdset_named != None:
+            self.location.pilot.cmdset.add(self.provides_cmdset_named)
+
     def at_power_off(self):
         try:
             tickerhandler.remove(1, self.at_tick)
+
+            if self.provides_cmdset_named != None:
+                self.location.pilot.cmdset.delete(self.provides_cmdset_named)
         except Exception as e:
             pass
 
@@ -130,6 +135,7 @@ class Subsystem(Object):
         self.location.update_prompt(self.location.pilot)
 
 class DefaultEngine(Subsystem):
+    energyCapacity = AttributeProperty(default=10)
     energyConsumedPerTickPerLevel = AttributeProperty(default=1)
     thrustOutputPerLevel = AttributeProperty(default=1)
 
@@ -145,6 +151,7 @@ class DefaultReactor(Subsystem):
     energyConsumedPerTickPerLevel = AttributeProperty(default=0)
     fuelConsumedPerTickPerLevel = AttributeProperty(default=1)
     storedFuel = AttributeProperty(default=30)
+    energyCapacity = AttributeProperty(default=10)
 
     def at_object_creation(self):
         self.name = "Stock Reactor"
@@ -156,6 +163,17 @@ class DefaultBattery(Subsystem):
     energyTransferredPerTick = AttributeProperty(default=5)
 
 class DefaultRadar(Subsystem):
+    energyCapacity = AttributeProperty(default=10)
     energyConsumedPerTickPerLevel = AttributeProperty(default=1)
     name = "Stock Radar"
+    provides_cmdset_named = "typeclasses.objects.RadarCmdSet"
 
+    def pulse(self, caller, space_room):
+        power_draw = self.energyConsumedPerTickPerLevel * self.assignedEnergyLevel
+        if self.storedEnergy >= power_draw:
+            self.storedEnergy -= power_draw
+            # Basic implementation, render the map perfectly from the space_room
+            caller.msg(space_room.render_map(caller))
+            caller.msg("You feel a brief burst of electrical energy as your radar pulses.")
+        else:
+            caller.msg("Your radar doesn't have enough energy to pulse yet.")

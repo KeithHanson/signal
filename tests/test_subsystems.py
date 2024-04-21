@@ -4,7 +4,8 @@ from unittest.mock import patch, MagicMock
 
 from typeclasses.subsystems.base import Subsystem, DefaultCore, DefaultBattery, DefaultRadar, DefaultEngine, DefaultReactor
 from typeclasses.vehicles.base import DefaultSpaceShip
-from typeclasses.objects import Object, CmdPilotVehicle, CmdPowerOnVehicle
+from typeclasses.objects import Object, CmdPilotVehicle, CmdPowerOnVehicle, CmdPilotLaunch, CmdPilotDock, CmdRadarPulse
+from typeclasses.objects import SpaceRoom, SpaceRoomDock
 
 from evennia import TICKER_HANDLER as tickerhandler
 
@@ -28,6 +29,18 @@ class TestSubsystems(EvenniaCommandTest):
         self.default_radar = self.default_battery.linkedSubsystems[1]
 
         self.call( cmdobj=CmdPilotVehicle(), input_args="ship")
+
+        self.space_room = create.create_object( SpaceRoom, key="space_room" )
+
+        self.dock = create.create_object( SpaceRoomDock, key="dock",  )
+        self.dock.exit_room = self.space_room
+
+        
+        self.room1.newtonian_data["x"] = 20
+        self.room1.newtonian_data["y"] = 20
+
+        self.dock.move_to(self.room1)
+        self.room1.move_to(self.space_room)
 
     def test_default_reactor(self):
         self.assertEqual( self.default_reactor.energyProvidedPerTick, 10 )
@@ -97,8 +110,6 @@ class TestSubsystems(EvenniaCommandTest):
         self.assertEqual(self.default_radar.storedEnergy, 8)
 
     def run_normal_tick(self):
-        self.call( cmdobj=CmdPowerOnVehicle(), input_args="")
-
         # simulate the ticks
         self.default_core.at_tick()
         self.default_reactor.at_tick()
@@ -106,8 +117,13 @@ class TestSubsystems(EvenniaCommandTest):
         self.default_engine.at_tick()
         self.default_radar.at_tick()
 
-        print(self.call( cmdobj=CmdRadarPulse(), input_args="" ))
-
-
     def test_radar(self):
+        # for now, just make sure it doesn't fail
+        self.call(CmdPowerOnVehicle(), "")
+        self.call(CmdPilotLaunch(), "")
+        self.run_normal_tick()
+        self.run_normal_tick()
+        self.run_normal_tick()
+        self.run_normal_tick()
+        self.call( cmdobj=CmdRadarPulse(), input_args="" )
 

@@ -49,18 +49,18 @@ class Vehicle(Object):
     def at_object_creation(self):
         self.cmdset.add_default('typeclasses.objects.VehicleEntryCmdSet')
 
-        core = evennia.create_object('subsystems.base.DefaultCore', key="stock_core", location=self)
+        core = evennia.create_object('subsystems.base.DefaultCore', key="stock_core", location=self, aliases=["core"])
 
-        reactor = evennia.create_object('subsystems.base.DefaultReactor', key="stock_reactor", location=self)
+        reactor = evennia.create_object('subsystems.base.DefaultReactor', key="stock_reactor", location=self, aliases=["reactor"])
         core.link_to(reactor)
 
-        battery = evennia.create_object('subsystems.base.DefaultBattery', key="stock_battery", location=self)
+        battery = evennia.create_object('subsystems.base.DefaultBattery', key="stock_battery", location=self, aliases=["battery"])
         reactor.link_to(battery)
 
-        engine = evennia.create_object('subsystems.base.DefaultEngine', key="stock_engine", location=self)
+        engine = evennia.create_object('subsystems.base.DefaultEngine', key="stock_engine", location=self, aliases=["engine"])
         battery.link_to(engine)
 
-        radar = evennia.create_object('subsystems.base.DefaultRadar', key="stock_radar", location=self)
+        radar = evennia.create_object('subsystems.base.DefaultRadar', key="stock_radar", location=self, aliases=["radar"])
         battery.link_to(radar)
 
         self.aiCore = core

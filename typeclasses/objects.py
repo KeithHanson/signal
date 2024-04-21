@@ -23,6 +23,9 @@ from commands.command import Command
 class Vehicle:
     pass
 
+class DefaultRadar:
+    pass
+
 # Pearl clutch! I know, I re-opened the class. I'm a dirty rubyist at heart. 
 DefaultRoom.newtonian_data = NAttributeProperty(default={"x": 0, "y": 0, "Fx": 0, "Fy": 0, "Ax": 0, "Ay": 0})
 
@@ -197,7 +200,7 @@ class CmdPilotLook(Command):
     """
 
     key = "status"
-    alias = ["stats", "stat"]
+    aliases = ["stats", "stat"]
 
     locks = "cmd:all()"
 
@@ -381,6 +384,42 @@ class CmdPilotDock(Command):
 
         ship.msg_contents("Ship could not find a dock.")
         return False
+
+class CmdRadarPulse(Command):
+    """
+    Pulses the radar, allowing you to "see" around your ship.
+
+    Usage:
+       radar pulse 
+
+    """
+
+    key = "radar pulse"
+    aliases = ["pulse"]
+    locks = "cmd:all()"
+    help_category = "Radar Subsystems"
+
+    def func(self):
+        caller = self.caller
+        ship = self.caller.location
+        room = ship.location
+        
+        if not isinstance(room, SpaceRoom):
+            caller.msg("Pulsing your radar while docked is dangerous.")
+        else:
+            radar = caller.search("radar")
+            print(radar)
+            print("----")
+            print(caller.location.contents)
+            if not radar:
+                caller.msg("Do you have a radar installed?")
+            else:
+                radar.pulse(caller, room)
+
+
+class RadarCmdSet(CmdSet):
+    def at_cmdset_creation(self):
+        self.add(CmdRadarPulse)
 
 class VehiclePilotingCmdSet(CmdSet):
     def at_cmdset_creation(self):
