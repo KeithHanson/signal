@@ -124,3 +124,4 @@ class TestSpaceRoom(EvenniaCommandTest):
         self.call(CmdPilotDock(), "")
 
         self.assertEqual(self.ship.location, self.room1)
+        self.assertEqual(len(self.space_room.contents), 1)
