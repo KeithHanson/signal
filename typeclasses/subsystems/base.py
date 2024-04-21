@@ -30,6 +30,12 @@ class Subsystem(Object):
 
     powered = AttributeProperty(default=False)
 
+    provides_cmdset_named = AttributeProperty(default=None)
+
+    def at_object_creation(self):
+        if self.provides_cmdset_named != None:
+            self.cmdset.add_default(provides_cmdset_named)
+
     def get_prompt_text(self):
         sub_powered_color = "|g" if self.powered else "|r"
         stored_fuel_str = "(F" + str(self.storedFuel) + ") " if self.storedFuel > 0 else ""

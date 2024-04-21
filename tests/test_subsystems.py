@@ -95,3 +95,19 @@ class TestSubsystems(EvenniaCommandTest):
         self.assertEqual(self.default_engine.storedEnergy, 8)
         self.default_radar.at_tick()
         self.assertEqual(self.default_radar.storedEnergy, 8)
+
+    def run_normal_tick(self):
+        self.call( cmdobj=CmdPowerOnVehicle(), input_args="")
+
+        # simulate the ticks
+        self.default_core.at_tick()
+        self.default_reactor.at_tick()
+        self.default_battery.at_tick()
+        self.default_engine.at_tick()
+        self.default_radar.at_tick()
+
+        print(self.call( cmdobj=CmdRadarPulse(), input_args="" ))
+
+
+    def test_radar(self):
+

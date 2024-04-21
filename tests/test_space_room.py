@@ -3,7 +3,8 @@ from evennia.utils.test_resources import EvenniaTest, EvenniaCommandTest
 from unittest.mock import patch, MagicMock
 
 from typeclasses.vehicles.base import DefaultSpaceShip
-from typeclasses.objects import Object, SpaceRoom, SpaceRoomDock, CmdPilotLaunch, CmdPilotVehicle, CmdPilotLook
+from typeclasses.objects import Object, SpaceRoom, SpaceRoomDock 
+from typeclasses.objects import CmdPilotLaunch, CmdPilotVehicle, CmdPilotLook, CmdPilotDock
 
 class TestSpaceRoom(EvenniaCommandTest):
     def setUp(self):
@@ -117,3 +118,9 @@ class TestSpaceRoom(EvenniaCommandTest):
             rendered_string = self.rendered_map.split("\n")[row]
 
             self.assertEqual(test_string, rendered_string)
+
+    def test_docking(self):
+        self.call(CmdPilotLaunch(), "")
+        self.call(CmdPilotDock(), "")
+
+        self.assertEqual(self.ship.location, self.room1)

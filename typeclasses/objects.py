@@ -20,6 +20,9 @@ import evennia
 
 from commands.command import Command
 
+class Vehicle:
+    pass
+
 # Pearl clutch! I know, I re-opened the class. I'm a dirty rubyist at heart. 
 DefaultRoom.newtonian_data = NAttributeProperty(default={"x": 0, "y": 0, "Fx": 0, "Fy": 0, "Ax": 0, "Ay": 0})
 
@@ -337,12 +340,56 @@ class CmdPilotLaunch(Command):
         else:
             caller.msg("Couldn't find a dock. Contact a builder!")
 
+class CmdPilotDock(Command):
+    """
+    Dock the vehicle from space to a room with a dock.
+
+    Usage:
+        launch
+    """
+
+    key = "dock"
+    
+    locks = "cmd:all()"
+    help_category = "Piloting"
+
+    def func(self):
+        caller = self.caller
+        ship = self.caller.location
+        if not str(ship) == "ship":
+            caller.msg("Are you in a vehicle?")
+            return False
+
+        space_room = ship.location
+
+        if not isinstance(space_room, SpaceRoom):
+            caller.msg("Are you already docked?")
+            return False
+        
+        potential_rooms_with_docks = space_room.get_contents_at_position(ship.newtonian_data["x"], ship.newtonian_data["y"])
+
+        for room in potential_rooms_with_docks:
+            dock = room.search("dock")    
+
+            if dock:
+                ship.newtonian_data["x"] = dock.location.newtonian_data["x"]
+                ship.newtonian_data["y"] = dock.location.newtonian_data["y"]
+
+                ship.move_to(dock.location)
+                ship.msg_contents("You feel your ship tugged by the taxi mechanisms from the dock, placing your ship gently inside.")
+                return True
+
+        ship.msg_contents("Ship could not find a dock.")
+        return False
+
 class VehiclePilotingCmdSet(CmdSet):
     def at_cmdset_creation(self):
         self.add(CmdDisembarkVehicle())
         self.add(CmdPowerOnVehicle())
         self.add(CmdPowerOffVehicle())
         self.add(CmdPilotLook())
+        self.add(CmdPilotLaunch())
+        self.add(CmdPilotDock())
 
 class VehicleEntryCmdSet(CmdSet):
     def at_cmdset_creation(self):
@@ -354,6 +401,14 @@ class SpaceRoom(DefaultRoom):
 
     def item_nearby(self, item, x, y):
         return item.newtonian_data["x"] <= x + 5 and item.newtonian_data["x"] >= x - 5 and item.newtonian_data["y"] <= y + 5 and item.newtonian_data["y"] >= y - 5
+
+    def get_contents_at_position(self, x, y):
+        items = []
+        for item in self.contents:
+            if item.newtonian_data["x"] == x and item.newtonian_data["y"] == y:
+                items.append(item)
+
+        return items
 
     def get_contents_near_position(self, x, y):
         nearby = []
