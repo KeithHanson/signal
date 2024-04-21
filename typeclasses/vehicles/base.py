@@ -34,7 +34,12 @@ class Vehicle(Object):
 
         full_subsystems_text = ' '.join(sub_texts)
 
-        return f"{self.name} {powered_color}{powered_text}|n {full_subsystems_text}] >\n"
+        position_string = ""
+        print(self)
+        if self.nattributes.get("pos") != None:
+            position_string = f" x:{self.nattributes.pos['x']},y:{self.nattributes.pos['y']}"
+
+        return f"{self.name}{position_string} {powered_color}{powered_text}|n {full_subsystems_text}] >\n"
 
     def get_display_desc(self, looker, **kwargs):
         if self.powered:
@@ -113,6 +118,4 @@ class Vehicle(Object):
         return True
 
 class DefaultSpaceShip(Vehicle):
-    def at_object_creation(self):
-        super().at_object_creation()
-        pass
+    pass

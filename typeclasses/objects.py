@@ -11,7 +11,7 @@ inheritance.
 
 """
 
-from evennia.objects.objects import DefaultObject
+from evennia.objects.objects import DefaultObject, DefaultRoom
 
 from evennia import CmdSet, AttributeProperty
 from evennia import TICKER_HANDLER as tickerhandler
@@ -302,6 +302,32 @@ class CmdPowerOffVehicle(Command):
         ship = self.caller.location
         ship.at_power_off()
 
+class CmdPilotLaunch(Command):
+    """
+    Launch the vehicle into space from a room with a dock.
+
+    Usage:
+        launch
+    """
+
+    key = "launch"
+    
+    locks = "cmd:all()"
+    help_category = "Piloting"
+
+    def func(self):
+        caller = self.caller
+        ship = self.caller.location
+
+        dock = ship.location.search("dock")
+
+        if dock:
+            ship.nattributes.pos = dock.location.nattributes.pos
+            ship.move_to(dock.exit_room)
+            ship.msg_contents("Your back gets pressed into your seat as the ship autopilotes out of the dock and into space.")
+
+        else:
+            caller.msg("Couldn't find a dock. Contact a builder!")
 
 class VehiclePilotingCmdSet(CmdSet):
     def at_cmdset_creation(self):
@@ -313,3 +339,10 @@ class VehiclePilotingCmdSet(CmdSet):
 class VehicleEntryCmdSet(CmdSet):
     def at_cmdset_creation(self):
         self.add(CmdPilotVehicle())
+
+class SpaceRoom(DefaultRoom):
+    pass
+
+class SpaceRoomDock(Object):
+    exit_room = AttributeProperty(default=None)
+    pass
