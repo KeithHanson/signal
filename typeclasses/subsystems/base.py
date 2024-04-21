@@ -37,9 +37,9 @@ class Subsystem(Object):
 
     def get_prompt_text(self):
         sub_powered_color = "|g" if self.powered else "|r"
-        stored_fuel_str = "(F" + str(self.storedFuel) + ") " if self.storedFuel > 0 else ""
+        stored_fuel_str = "(F" + str(self.storedFuel) + ")" if self.storedFuel > 0 else ""
         stored_energy_str = "(E" + str(self.storedEnergy) + ")"
-        return sub_powered_color + self.name + ":" + str(self.assignedEnergyLevel) + stored_fuel_str + stored_energy_str
+        return sub_powered_color + self.HUDname + ":" + str(self.assignedEnergyLevel) + stored_fuel_str + stored_energy_str
 
     def link_to(self, receiver):
         if self.linkedSubsystems == None:
@@ -140,10 +140,12 @@ class DefaultEngine(Subsystem):
     thrustOutputPerLevel = AttributeProperty(default=1)
 
     name = "Stock Engine"
+    HUDname = "engine"
 
 class DefaultCore(Subsystem):
     energyConsumedPerTickPerLevel = AttributeProperty(default=0)
     name = "Stock AI Core"
+    HUDname = "core"
 
 class DefaultReactor(Subsystem):
     energyProvidedPerTick = AttributeProperty(default=10)
@@ -152,12 +154,14 @@ class DefaultReactor(Subsystem):
     fuelConsumedPerTickPerLevel = AttributeProperty(default=1)
     storedFuel = AttributeProperty(default=30)
     energyCapacity = AttributeProperty(default=10)
+    HUDname = "reactor"
 
     def at_object_creation(self):
         self.name = "Stock Reactor"
 
 class DefaultBattery(Subsystem):
     name = "Stock Battery"
+    HUDname = "battery"
     energyCapacity = AttributeProperty(default=30)
     energyConsumedPerTickPerLevel = AttributeProperty(default=0)
     energyTransferredPerTick = AttributeProperty(default=5)
@@ -166,6 +170,7 @@ class DefaultRadar(Subsystem):
     energyCapacity = AttributeProperty(default=10)
     energyConsumedPerTickPerLevel = AttributeProperty(default=1)
     name = "Stock Radar"
+    HUDname = "radar"
     provides_cmdset_named = "typeclasses.objects.RadarCmdSet"
 
     def pulse(self, caller, space_room):
@@ -173,6 +178,7 @@ class DefaultRadar(Subsystem):
         if self.storedEnergy >= power_draw:
             self.storedEnergy -= power_draw
             # Basic implementation, render the map perfectly from the space_room
+            caller.msg("")
             caller.msg(space_room.render_map(caller))
             caller.msg("You feel a brief burst of electrical energy as your radar pulses and its capacitors drain.")
         else:
