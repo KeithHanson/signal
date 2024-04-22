@@ -506,25 +506,47 @@ class CmdEngineThrust(Command):
                 caller.msg("Do you have an engine installed?")
             else:
                 thrust_msg = "Your body feels the newtonian forces as the thrusters pulse and acceleration increases."
+
+                notify_failure = False
+
                 if self.target == "n":
                     if engine.thrust_north():
                         ship.msg_contents(thrust_msg)
+                    else:
+                        notify_failure = True
+
                 elif self.target == "s":
                     if engine.thrust_south():
                         ship.msg_contents(thrust_msg)
+                    else:
+                        notify_failure = True
 
                 elif self.target == "w":
                     if engine.thrust_west():
                         ship.msg_contents(thrust_msg)
+                    else:
+                        notify_failure = True
+
                 elif self.target == "e":
                     if engine.thrust_east():
                         ship.msg_contents(thrust_msg)
+                    else:
+                        notify_failure = True
+
                 elif self.target == "reset":
                     if engine.thrust_reset():
                         ship.msg_contents("Your stomache jumps a little as the thrusters forces subside and turn off.")
+                    else:
+                        notify_failure = True
+
                 elif self.target == "emergency_stop":
                     if engine.emergency_stop():
                         ship.msg_contents("Your stomach wrenches as you come to a complete stop, flashing lights and warning sirens blaring.")
+                    else:
+                        notify_failure = True
+
+                if notify_failure:
+                    ship.msg_contents("Engine was not able to comply.")
 
 class RadarCmdSet(CmdSet):
     def at_cmdset_creation(self):
