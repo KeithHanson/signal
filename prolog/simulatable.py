@@ -7,6 +7,7 @@ import time
 class Simulatable:
     to_simulate = {}
     simulation_thread = None    
+    simulation_print = print
 
     @classmethod
     def program(cls):
@@ -43,21 +44,30 @@ class Simulatable:
     def track(cls, instance):
         cls.to_simulate[instance.id] = instance
 
+        if cls.simulation_thread != None and not cls.simulation_thread.is_alive():
+            cls.simulation_thread = None
+
         if cls.simulation_thread == None:
 
             def simulation_loop():
                 while True:
-                    start_time = time.time()
+                    try:
+                        start_time = time.time()
 
-                    cls.simulate()
+                        cls.simulate()
 
-                    elapsed_time = time.time() - start_time
-                    sleep_time = max(1 - elapsed_time, 0)
+                        elapsed_time = time.time() - start_time
+                        sleep_time = max(1 - elapsed_time, 0)
 
-                    time.sleep(sleep_time)
+                        time.sleep(sleep_time)
 
-                    if len(list(cls.to_simulate.items())) == 0:
-                        return True
+                        if len(list(cls.to_simulate.items())) == 0:
+                            return True
+                    except Exception as e:
+                        print("!!! SIMULATION THREAD EXCEPTION !!!")
+                        print(f"{cls}")
+                        print(e)
+                        cls.simulation_thread = None
 
             cls.simulation_thread = threading.Thread(target=simulation_loop)
             cls.simulation_thread.setDaemon(True)  # Set as a daemon so it exits when main program exits

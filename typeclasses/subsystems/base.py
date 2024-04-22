@@ -187,6 +187,7 @@ class DefaultEngine(Subsystem):
         self.location.newtonian_data["Fy"] = 0
 
     def emergency_stop(self):
+        self.location.msg_contents("You feel your guts slam around as the emergency stop is performed, alarm sirens blaring.")
         self.location.at_power_off()
 
         self.location.newtonian_data["Fx"] = 0

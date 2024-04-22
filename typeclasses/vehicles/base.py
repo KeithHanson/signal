@@ -71,9 +71,12 @@ class Vehicle(Object):
 
     def at_pilot_enter(self, pilot):
         self.location.msg_contents("$You() $conj(open) the hatch and $conj(enter) the vehicle, the seal closing with a hiss.", from_obj=pilot)
-
         self.pilot = pilot
-        pilot.location = self
+
+        if self.pilot.location == self:
+            self.pilot.msg("You place your hands gently on the controls, feeling the ship humming, ready for input.")
+        else:
+            pilot.location = self
 
         if not self.pilot.cmdset.has("typeclasses.objects.VehiclePilotingCmdSet"):
             self.pilot.cmdset.add("typeclasses.objects.VehiclePilotingCmdSet")

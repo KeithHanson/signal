@@ -19,6 +19,12 @@ from evennia import TICKER_HANDLER as tickerhandler
 import evennia
 from evennia.utils import create
 
+from evennia.utils import utils
+
+from django.conf import settings
+COMMAND_DEFAULT_CLASS = utils.class_from_module(settings.COMMAND_DEFAULT_CLASS)
+print(COMMAND_DEFAULT_CLASS)
+
 from commands.command import Command
 
 from prolog.simulatable import Simulatable
@@ -252,7 +258,7 @@ class CmdPilotLook(Command):
         self.caller.msg(self.caller.location.at_desc(looker=self.caller))
         pass
 
-class CmdPilotVehicle(Command):
+class CmdPilotVehicle(COMMAND_DEFAULT_CLASS):
     """
     Begin piloting a vehicle.
 
@@ -270,17 +276,22 @@ class CmdPilotVehicle(Command):
     def func(self):
         caller = self.caller
 
-        if not self.target or self.target == "here":
-            caller.msg("Pilot what?")
-        else:
-            target = caller.search(self.target)
+        if not self.args:
+            target = caller.location
             if not target:
-                caller.msg("Couldn't find that to pilot.")
+                caller.msg("You are neither in a ship nor have provided a target ship to pilot!")
+                return
 
+            target.at_pilot_enter(caller)
+        else:
+            target = caller.search(self.args)
+            if not target:
+                return
             if hasattr(target, "at_pilot_enter"):
                 target.at_pilot_enter(caller)
             else:
                 caller.msg("Hm... can't pilot that.")
+
 
 class CmdDisembarkVehicle(Command):
     """
@@ -372,7 +383,10 @@ class CmdPilotLaunch(Command):
             ship.msg_contents("Your back gets pressed into your seat as the ship autopilotes out of the dock and into space.")
 
         else:
-            caller.msg("Couldn't find a dock. Contact a builder!")
+            if isinstance(ship.location, SpaceRoom):
+                caller.msg("You are already in space!")
+            else:
+                caller.msg("Couldn't find a dock. Contact a builder!")
 
 class CmdPilotDock(Command):
     """
@@ -408,6 +422,10 @@ class CmdPilotDock(Command):
             if dock:
                 ship.newtonian_data["x"] = dock.location.newtonian_data["x"]
                 ship.newtonian_data["y"] = dock.location.newtonian_data["y"]
+                ship.newtonian_data["Fx"] = 0
+                ship.newtonian_data["Fy"] = 0
+                ship.newtonian_data["Vx"] = 0
+                ship.newtonian_data["Vy"] = 0
 
                 ship.move_to(dock.location)
                 ship.msg_contents("You feel your ship tugged by the taxi mechanisms from the dock, placing your ship gently inside.")
