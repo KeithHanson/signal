@@ -52,8 +52,6 @@ class Vehicle(Object):
             return (str(self.db.desc) + " " if self.db.desc != None else "") + "The vehicle sits silently, powered off, awaiting it's pilot."
 
     def at_object_creation(self):
-        self.cmdset.add_default('typeclasses.objects.VehicleEntryCmdSet')
-
         core = evennia.create_object('subsystems.base.DefaultCore', key="stock_core", location=self, aliases=["core"])
 
         reactor = evennia.create_object('subsystems.base.DefaultReactor', key="stock_reactor", location=self, aliases=["reactor"])
