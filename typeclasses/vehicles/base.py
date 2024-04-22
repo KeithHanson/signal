@@ -22,9 +22,8 @@ class Vehicle(Object):
         return f"body({self.id}, {self.newtonian_data['x']}, {self.newtonian_data['y']}, {self.newtonian_data['Vx']}, {self.newtonian_data['Vy']}, {self.newtonian_data['Fx']}, {self.newtonian_data['Fy']}, 1, 0)."
 
     def update_prompt(self, caller):
-        ship = caller.location
-
-        ship.pilot.msg(prompt=self.get_prompt_text())
+        if self.pilot:
+            self.pilot.msg(prompt=self.get_prompt_text())
 
     def get_prompt_text(self):
         powered_color = "|g" if self.powered else "|r"
