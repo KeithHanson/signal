@@ -282,7 +282,8 @@ class CmdPilotVehicle(COMMAND_DEFAULT_CLASS):
                 caller.msg("You are neither in a ship nor have provided a target ship to pilot!")
                 return
 
-            target.at_pilot_enter(caller)
+            if hasattr(target, "at_pilot_enter"):
+                target.at_pilot_enter(caller)
         else:
             target = caller.search(self.args)
             if not target:
