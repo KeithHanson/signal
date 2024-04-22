@@ -284,6 +284,8 @@ class CmdPilotVehicle(COMMAND_DEFAULT_CLASS):
 
             if hasattr(target, "at_pilot_enter"):
                 target.at_pilot_enter(caller)
+            else:
+                caller.msg("You can't pilot this!")
         else:
             target = caller.search(self.args)
             if not target:
