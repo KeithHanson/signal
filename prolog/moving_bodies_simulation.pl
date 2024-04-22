@@ -42,7 +42,7 @@ position_y(B, Py, 0) :- initial_position_y(B, Py), body(B).
 body(B, T, Px, Py, Vx, Vy, M) :- body(B), time(T), position_x(B, Px, T), position_y(B, Py, T), velocity_x(B, Vx, T), velocity_y(B, Vy, T), mass(B, M).
 
 % just the basics for output
-time_body_position(T, B, Px, Py) :- body(B), time(T), position_x(B, Px, T), position_y(B, Py, T), T > 0.
+time_body_position(T, B, Px, Py, Vx, Vy) :- body(B), time(T), position_x(B, Px, T), position_y(B, Py, T), velocity_x(B, Vx, T), velocity_y(B, Vy, T), T > 0.
 
 % Output the results for each time, body, and position
-#show body/7.
+#show time_body_position/6.

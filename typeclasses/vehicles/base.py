@@ -19,7 +19,7 @@ class Vehicle(Object):
     def to_fact(self):
         #%   (B, Ix, Iy, IVx, IVy, Fx, Fy, M, T)
         #body(1, 0,  0,  0,   0,   1,  0,  1, 0).
-        return f"body({self.id}, {self.newtonian_data['x']}, {self.newtonian_data['y']}, {self.newtonian_data['Vx']}, {self.newtonian_data['Vy']}, {self.newtonian_data['Vx']}, {self.newtonian_data['Fx']}, {self.newtonian_data['Fx']}, 1, 0)."
+        return f"body({self.id}, {self.newtonian_data['x']}, {self.newtonian_data['y']}, {self.newtonian_data['Vx']}, {self.newtonian_data['Vy']}, {self.newtonian_data['Fx']}, {self.newtonian_data['Fy']}, 1, 0)."
 
     def update_prompt(self, caller):
         ship = caller.location
@@ -47,9 +47,9 @@ class Vehicle(Object):
 
     def get_display_desc(self, looker, **kwargs):
         if self.powered:
-            return self.db.desc + " The vehicle hums quietly, powered and ready for flight. " + "Subsystems: " + str(len(self.aiCore.linkedSubsystems))
+            return (str(self.db.desc) + " " if self.db.desc != None else "") + "The vehicle hums quietly, powered and ready for flight."
         else:
-            return self.db.desc + " The vehicle sits silently, powered off, awaiting it's pilot. " + "Subsystems: " + str(len(self.aiCore.linkedSubsystems))
+            return (str(self.db.desc) + " " if self.db.desc != None else "") + "The vehicle sits silently, powered off, awaiting it's pilot."
 
     def at_object_creation(self):
         self.cmdset.add_default('typeclasses.objects.VehicleEntryCmdSet')

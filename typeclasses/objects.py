@@ -17,10 +17,12 @@ from evennia import CmdSet, AttributeProperty
 from evennia.typeclasses.attributes import NAttributeProperty
 from evennia import TICKER_HANDLER as tickerhandler
 import evennia
+from evennia.utils import create
 
 from commands.command import Command
 
 from prolog.simulatable import Simulatable
+
 
 class Vehicle:
     pass
@@ -192,6 +194,37 @@ class Object(ObjectParent, DefaultObject):
 
     pass
 
+class CmdBootstrapSpaceroom(Command):
+    """
+    Superuser command for creating a quick SpaceRoom -> Room w SpaceRoomDock -> Ship.
+
+    Usage:
+        bootstrap_spaceroom
+    """
+    key = "bootstrap_spaceroom"
+    
+    locks = "cmd::perm(Builder)"
+
+    help_category = "Builder Utilities"
+
+    def func(self):
+        room1 = create.create_object( "objects.DefaultRoom", key="hangar")
+        self.caller.move_to(room1)
+
+        default_vehicle = create.create_object( "vehicles.base.DefaultSpaceShip", key="ship" )
+        default_vehicle.move_to(room1)
+
+        space_room = create.create_object( SpaceRoom, key="space_room" )
+
+        dock = create.create_object( SpaceRoomDock, key="dock",  )
+        dock.exit_room = space_room
+
+        
+        room1.newtonian_data["x"] = 20
+        room1.newtonian_data["y"] = 20
+
+        dock.move_to(room1)
+        room1.move_to(space_room)
 
 class CmdPilotLook(Command):
     """
@@ -251,7 +284,10 @@ class CmdPilotVehicle(Command):
             if not target:
                 caller.msg("Couldn't find that to pilot.")
 
-            target.at_pilot_enter(caller)
+            if hasattr(target, "at_pilot_enter"):
+                target.at_pilot_enter(caller)
+            else:
+                caller.msg("Hm... can't pilot that.")
 
 class CmdDisembarkVehicle(Command):
     """
@@ -371,7 +407,7 @@ class CmdPilotDock(Command):
             caller.msg("Are you already docked?")
             return False
         
-        potential_rooms_with_docks = space_room.get_contents_at_position(ship.newtonian_data["x"], ship.newtonian_data["y"])
+        potential_rooms_with_docks = space_room.get_contents_near_position(ship.newtonian_data["x"], ship.newtonian_data["y"])
 
         for room in potential_rooms_with_docks:
             dock = room.search("dock")    
@@ -415,10 +451,74 @@ class CmdRadarPulse(Command):
             else:
                 radar.pulse(caller, room)
 
+class CmdEngineThrust(Command):
+    """
+    Pulses the radar, allowing you to "see" around your ship.
+
+    Usage:
+       thrust n 
+       thrust s
+       thrust e
+       thrust w
+       thrust reset
+       thrust emergency_stop
+    """
+
+    key = "thrust"
+
+    locks = "cmd:all()"
+
+    help_category = "Engine Subsystems"
+
+    def parse(self):
+        if self.args.strip() == "":
+            self.target = None
+        else:
+            self.target = self.args.strip()
+        pass
+
+    def func(self):
+        caller = self.caller
+
+        ship = self.caller.location
+
+        room = ship.location
+
+        if not isinstance(room, SpaceRoom):
+            caller.msg("Pulsing your thrusters indoors would not be kind.")
+        else:
+            engine = caller.search("engine")
+            if not engine:
+                caller.msg("Do you have an engine installed?")
+            else:
+                thrust_msg = "Your body feels the newtonian forces as the thrusters pulse and acceleration increases."
+                if self.target == "n":
+                    if engine.thrust_north():
+                        ship.msg_contents(thrust_msg)
+                elif self.target == "s":
+                    if engine.thrust_south():
+                        ship.msg_contents(thrust_msg)
+
+                elif self.target == "w":
+                    if engine.thrust_west():
+                        ship.msg_contents(thrust_msg)
+                elif self.target == "e":
+                    if engine.thrust_east():
+                        ship.msg_contents(thrust_msg)
+                elif self.target == "reset":
+                    if engine.thrust_reset():
+                        ship.msg_contents("Your stomache jumps a little as the thrusters forces subside and turn off.")
+                elif self.target == "emergency_stop":
+                    if engine.emergency_stop():
+                        ship.msg_contents("Your stomach wrenches as you come to a complete stop, flashing lights and warning sirens blaring.")
 
 class RadarCmdSet(CmdSet):
     def at_cmdset_creation(self):
         self.add(CmdRadarPulse)
+
+class EngineCmdSet(CmdSet):
+    def at_cmdset_creation(self):
+        self.add(CmdEngineThrust)
 
 class VehiclePilotingCmdSet(CmdSet):
     def at_cmdset_creation(self):
@@ -437,11 +537,49 @@ class SpaceRoom(DefaultRoom, Simulatable):
     width = AttributeProperty(default=1000)
     height = AttributeProperty(default=1000)
 
-    
+    def at_server_reload(self):
+        print("Simulation needs to cleaup! reload happening!")
+
+        self.to_simulate = {}
+
+        return True
+
+    def at_init(self):
+        print("Simulation initializing! getting contents.")
+        for item in self.contents:
+            if hasattr(item, "newtonian_data") and hasattr(item, "to_fact"):
+                self.track(item)
+        return True
+
+    @classmethod
+    def program(cls):
+        with open('prolog/moving_bodies_simulation.pl', 'r') as file:
+            content = file.read()
+        return content
+
+    @classmethod
+    def update(cls, model):
+        for fact in model.symbols(shown=True):
+            # print(fact)
+            # time_body_position(T, B, Px, Py, Vx, Vy)
+            # time_body_position(1,14,20,22,0,0)
+            time_step, body, px, py, vx, vy = [int(strPart) for strPart in str(fact).replace("time_body_position(", "").replace(")", "").split(",")]
+
+            entity = cls.to_simulate[body]
+
+            fx = entity.newtonian_data["Fx"]
+            fy = entity.newtonian_data["Fy"]
+            entity.newtonian_data["x"] = px
+            entity.newtonian_data["y"] = py
+            entity.newtonian_data["Vx"] = vx
+            entity.newtonian_data["Vy"] = vy
+
+            if vx > 0 or vx < 0 or vy > 0 or vy < 0:
+                entity.msg_contents(f"You are moving. \n|rPos: {px},{py} |bVelocity: {vx},{vy} |gForce: {fx}, {fy}|n")
+
     def at_object_leave(self, moved_obj, target_location, move_type="move", **kwargs):
         try:
             if hasattr(moved_obj, "newtonian_data") and hasattr(moved_obj, "to_fact"):
-                print(f"REMOVING: Tracking {arriving_object} for simulation")
                 self.ignore(moved_obj)
         except Exception as e:
             print(e)
@@ -451,8 +589,6 @@ class SpaceRoom(DefaultRoom, Simulatable):
     def at_pre_object_receive(self, arriving_object, source_location, **kwargs):
         try:
             if hasattr(arriving_object, "newtonian_data") and hasattr(arriving_object, "to_fact"):
-                print(f"Tracking {arriving_object} for simulation")
-                print(f"Fact: {arriving_object.to_fact()}")
                 self.track(arriving_object)
         except Exception as e:
             print(e)
@@ -460,7 +596,7 @@ class SpaceRoom(DefaultRoom, Simulatable):
             return True
 
     def item_nearby(self, item, x, y):
-        return item.newtonian_data["x"] <= x + 5 and item.newtonian_data["x"] >= x - 5 and item.newtonian_data["y"] <= y + 5 and item.newtonian_data["y"] >= y - 5
+        return item.newtonian_data["x"] <= x + 10 and item.newtonian_data["x"] >= x - 10 and item.newtonian_data["y"] <= y + 10 and item.newtonian_data["y"] >= y - 10
 
     def get_contents_at_position(self, x, y):
         items = []
@@ -494,7 +630,7 @@ class SpaceRoom(DefaultRoom, Simulatable):
         output = f"{row_y:+05} | "
         empty_space = ". "
 
-        for i in range(origin_x - 5,origin_x + 5 + 1):
+        for i in range(origin_x - 10,origin_x + 10 + 1):
             objects_at_location = self.objects_here(i, row_y, nearby)
             if len(objects_at_location) > 0:
                 output += "@ "
@@ -516,13 +652,14 @@ class SpaceRoom(DefaultRoom, Simulatable):
         rows = []
 
         rows.append("")
-        for i in range(origin_y - 5, origin_y + 5 + 1):
+        for i in range(origin_y - 10, origin_y + 10 + 1):
             rows.append(self.render_row(i, origin_x, nearby))
 
-        rows.append("      -----------------------")
-        rows.append(f"               x:{origin_x:+05}")
+        rows.append("      -------------------------------------------")
+        rows.append(f"                     x:{origin_x:+05}")
         rows.append("")
 
+        rows.reverse()
         return "\n".join(rows)
 
 class SpaceRoomDock(Object):

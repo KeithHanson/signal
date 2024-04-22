@@ -138,9 +138,62 @@ class DefaultEngine(Subsystem):
     energyCapacity = AttributeProperty(default=10)
     energyConsumedPerTickPerLevel = AttributeProperty(default=1)
     thrustOutputPerLevel = AttributeProperty(default=1)
-
+    provides_cmdset_named = "typeclasses.objects.EngineCmdSet"
     name = "Stock Engine"
     HUDname = "engine"
+
+    def thrust_north(self):
+        desired_thrust_level = self.location.newtonian_data["Fy"] + 1
+        current_max_thrust_level = self.thrustOutputPerLevel * self.assignedEnergyLevel
+        if  desired_thrust_level <= current_max_thrust_level:
+            self.location.newtonian_data["Fy"] += 1
+            return True
+        else: 
+            return False
+
+    def thrust_south(self):
+        desired_thrust_level = self.location.newtonian_data["Fy"] - 1
+
+        current_max_thrust_level = self.thrustOutputPerLevel * self.assignedEnergyLevel
+
+        if  abs(desired_thrust_level) <= current_max_thrust_level:
+            self.location.newtonian_data["Fy"] -= 1
+            return True
+        else: 
+            return False
+
+    def thrust_west(self):
+        desired_thrust_level = self.location.newtonian_data["Fx"] - 1
+
+        current_max_thrust_level = self.thrustOutputPerLevel * self.assignedEnergyLevel
+
+        if  abs(desired_thrust_level) <= current_max_thrust_level:
+            self.location.newtonian_data["Fx"] -= 1
+            return True
+        else: 
+            return False
+
+    def thrust_east(self):
+        desired_thrust_level = self.location.newtonian_data["Fx"] + 1
+        current_max_thrust_level = self.thrustOutputPerLevel * self.assignedEnergyLevel
+        if  desired_thrust_level <= current_max_thrust_level:
+            self.location.newtonian_data["Fx"] += 1
+            return True
+        else: 
+            return False
+
+    def thrust_reset(self):
+        self.location.newtonian_data["Fx"] = 0
+        self.location.newtonian_data["Fy"] = 0
+
+    def emergency_stop(self):
+        self.location.at_power_off()
+
+        self.location.newtonian_data["Fx"] = 0
+        self.location.newtonian_data["Fy"] = 0
+        self.location.newtonian_data["Vx"] = 0
+        self.location.newtonian_data["Vy"] = 0
+
 
 class DefaultCore(Subsystem):
     energyConsumedPerTickPerLevel = AttributeProperty(default=0)
@@ -155,9 +208,7 @@ class DefaultReactor(Subsystem):
     storedFuel = AttributeProperty(default=30)
     energyCapacity = AttributeProperty(default=10)
     HUDname = "reactor"
-
-    def at_object_creation(self):
-        self.name = "Stock Reactor"
+    name = "Stock Reactor"
 
 class DefaultBattery(Subsystem):
     name = "Stock Battery"

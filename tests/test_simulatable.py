@@ -37,7 +37,7 @@ class TestSimulatable(EvenniaCommandTest):
             @classmethod
             def update(cls, model):
                 symbol = str(model.symbols(shown=True)[0])
-                item = cls.to_simulate[0]
+                key,item = list(cls.to_simulate.items())[0]
 
                 item.opposite = symbol.split("(")[1].replace(")", "")
 

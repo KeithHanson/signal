@@ -4,10 +4,11 @@ from unittest.mock import patch, MagicMock
 
 from typeclasses.subsystems.base import Subsystem, DefaultCore, DefaultBattery, DefaultRadar, DefaultEngine, DefaultReactor
 from typeclasses.vehicles.base import DefaultSpaceShip
-from typeclasses.objects import Object, CmdPilotVehicle, CmdPowerOnVehicle, CmdPilotLaunch, CmdPilotDock, CmdRadarPulse
+from typeclasses.objects import Object, CmdPilotVehicle, CmdPowerOnVehicle, CmdPilotLaunch, CmdPilotDock, CmdRadarPulse, CmdEngineThrust
 from typeclasses.objects import SpaceRoom, SpaceRoomDock
 
 from evennia import TICKER_HANDLER as tickerhandler
+import time
 
 class TestSubsystems(EvenniaCommandTest):
     def setUp(self):
@@ -126,4 +127,63 @@ class TestSubsystems(EvenniaCommandTest):
         self.run_normal_tick()
         self.run_normal_tick()
         self.call( cmdobj=CmdRadarPulse(), input_args="" )
+    
+    def test_thrust_north(self):
+        self.call(CmdPowerOnVehicle(), "")
+        self.call(CmdPilotLaunch(), "")
+        self.run_normal_tick()
+        self.run_normal_tick()
+        self.run_normal_tick()
+        self.run_normal_tick()
 
+        print(self.call(CmdEngineThrust(), "n"))
+        print(self.call(CmdEngineThrust(), "e"))
+        print(self.call(CmdRadarPulse(), input_args="" ))
+
+        time.sleep(1)
+        self.run_normal_tick()
+        print(self.call(CmdEngineThrust(), "w"))
+        print(self.call(CmdRadarPulse(), input_args="" ))
+
+        time.sleep(1)
+        print(self.call(CmdEngineThrust(), "w"))
+        self.run_normal_tick()
+        print(self.call(CmdRadarPulse(), input_args="" ))
+
+        time.sleep(1)
+        print(self.call(CmdEngineThrust(), "e"))
+        self.run_normal_tick()
+        print(self.call(CmdRadarPulse(), input_args="" ))
+
+        print(self.call(CmdEngineThrust(), "s"))
+        print(self.call(CmdEngineThrust(), "s"))
+        print(self.call(CmdRadarPulse(), input_args="" ))
+
+        time.sleep(1)
+        self.run_normal_tick()
+        print(self.call(CmdRadarPulse(), input_args="" ))
+
+        time.sleep(1)
+        self.run_normal_tick()
+        print(self.call(CmdRadarPulse(), input_args="" ))
+
+        time.sleep(1)
+        self.run_normal_tick()
+        
+        print(self.call(CmdRadarPulse(), input_args="" ))
+
+        time.sleep(1)
+        self.run_normal_tick()
+        print(self.call(CmdRadarPulse(), input_args="" ))
+
+        time.sleep(1)
+        self.run_normal_tick()
+        print(self.call(CmdRadarPulse(), input_args="" ))
+
+        time.sleep(1)
+        self.run_normal_tick()
+        print(self.call(CmdRadarPulse(), input_args="" ))
+
+        time.sleep(1)
+        self.run_normal_tick()
+        print(self.call(CmdRadarPulse(), input_args="" ))
