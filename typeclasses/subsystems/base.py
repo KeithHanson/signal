@@ -118,7 +118,8 @@ class Subsystem(Object):
         self.location.update_prompt(self.location.pilot)
 
         if self.provides_cmdset_named != None:
-            self.location.pilot.cmdset.add(self.provides_cmdset_named)
+            if self.location.pilot:
+                self.location.pilot.cmdset.add(self.provides_cmdset_named)
 
     def at_power_off(self):
         try:
