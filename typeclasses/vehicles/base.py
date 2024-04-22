@@ -77,7 +77,8 @@ class Vehicle(Object):
         self.pilot = pilot
         pilot.location = self
 
-        self.pilot.cmdset.add("typeclasses.objects.VehiclePilotingCmdSet")
+        if not self.pilot.cmdset.has("typeclasses.objects.VehiclePilotingCmdSet"):
+            self.pilot.cmdset.add("typeclasses.objects.VehiclePilotingCmdSet")
 
 
     def at_pilot_exit(self, pilot):
