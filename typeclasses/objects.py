@@ -267,13 +267,6 @@ class CmdPilotVehicle(Command):
     locks = "cmd:all()"
     help_category = "Piloting"
 
-    def parse(self):
-        if self.args.strip() == "":
-            self.target = self.caller.search("here")
-        else:
-            self.target = self.caller.search(self.args.strip())
-        pass
-
     def func(self):
         caller = self.caller
 
