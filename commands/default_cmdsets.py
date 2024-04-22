@@ -15,7 +15,7 @@ own cmdsets by inheriting from them or directly from `evennia.CmdSet`.
 """
 
 from evennia import default_cmds
-from typeclasses.objects import CmdBootstrapSpaceroom
+from typeclasses.objects import CmdBootstrapSpaceroom, VehicleEntryCmdSet
 
 
 class CharacterCmdSet(default_cmds.CharacterCmdSet):
@@ -31,11 +31,11 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         """
         Populates the cmdset
         """
-        super().at_cmdset_creation()
         self.add(CmdBootstrapSpaceroom)
         #
         # any commands you add below will overload the default ones.
-        self.add('typeclasses.objects.VehicleEntryCmdSet')
+        self.add(VehicleEntryCmdSet)
+        super().at_cmdset_creation()
 
 
 
