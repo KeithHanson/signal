@@ -20,6 +20,8 @@ import evennia
 
 from commands.command import Command
 
+from prolog.simulatable import Simulatable
+
 class Vehicle:
     pass
 
@@ -27,7 +29,7 @@ class DefaultRadar:
     pass
 
 # Pearl clutch! I know, I re-opened the class. I'm a dirty rubyist at heart. 
-DefaultRoom.newtonian_data = NAttributeProperty(default={"x": 0, "y": 0, "Fx": 0, "Fy": 0, "Ax": 0, "Ay": 0})
+DefaultRoom.newtonian_data = NAttributeProperty(default={"x": 0, "y": 0, "Fx": 0, "Fy": 0, "Vx": 0, "Vy": 0})
 
 class ObjectParent:
     """
@@ -39,7 +41,7 @@ class ObjectParent:
     take precedence.
 
     """
-    newtonian_data = NAttributeProperty(default={"x": 0, "y": 0, "Fx": 0, "Fy": 0, "Ax": 0, "Ay": 0})
+    newtonian_data = NAttributeProperty(default={"x": 0, "y": 0, "Fx": 0, "Fy": 0, "Vx": 0, "Vy": 0})
 
 
 class Object(ObjectParent, DefaultObject):
@@ -431,9 +433,31 @@ class VehicleEntryCmdSet(CmdSet):
     def at_cmdset_creation(self):
         self.add(CmdPilotVehicle())
 
-class SpaceRoom(DefaultRoom):
+class SpaceRoom(DefaultRoom, Simulatable):
     width = AttributeProperty(default=1000)
     height = AttributeProperty(default=1000)
+
+    
+    def at_object_leave(self, moved_obj, target_location, move_type="move", **kwargs):
+        try:
+            if hasattr(moved_obj, "newtonian_data") and hasattr(moved_obj, "to_fact"):
+                print(f"REMOVING: Tracking {arriving_object} for simulation")
+                self.ignore(moved_obj)
+        except Exception as e:
+            print(e)
+        finally:
+            return True
+
+    def at_pre_object_receive(self, arriving_object, source_location, **kwargs):
+        try:
+            if hasattr(arriving_object, "newtonian_data") and hasattr(arriving_object, "to_fact"):
+                print(f"Tracking {arriving_object} for simulation")
+                print(f"Fact: {arriving_object.to_fact()}")
+                self.track(arriving_object)
+        except Exception as e:
+            print(e)
+        finally:
+            return True
 
     def item_nearby(self, item, x, y):
         return item.newtonian_data["x"] <= x + 5 and item.newtonian_data["x"] >= x - 5 and item.newtonian_data["y"] <= y + 5 and item.newtonian_data["y"] >= y - 5

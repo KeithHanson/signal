@@ -45,4 +45,4 @@ body(B, T, Px, Py, Vx, Vy, M) :- body(B), time(T), position_x(B, Px, T), positio
 time_body_position(T, B, Px, Py) :- body(B), time(T), position_x(B, Px, T), position_y(B, Py, T), T > 0.
 
 % Output the results for each time, body, and position
-#show time_body_position/4.
+#show body/7.
