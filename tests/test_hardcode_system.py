@@ -14,14 +14,12 @@ class MyHardcodeComputer(Hardcodable):
 
 class MySensor:
     def to_fact(self):
-        random_int = random.randint(1, 100)
         return f"fake_sensor(10)."
 
 
 class TestHardcodeSystem(EvenniaCommandTest):
     def setUp(self):
         super().setUp()
-
         
         self.pc = create.create_object( MyHardcodeComputer, key="pc" )
 
@@ -94,7 +92,7 @@ class TestHardcodeSystem(EvenniaCommandTest):
         self.assertEqual("Program loaded: smoke_test" in logs, True)
         self.assertEqual("Adding to running programs: smoke_test" in logs, True) 
         self.assertEqual("Execution loop complete." in logs, True)
-        self.assertEqual("DEBUG: Received truth from last loop:" in logs, True)
+        self.assertEqual("Received output from last loop:" in logs, True)
 
 
     def test_program_run_and_parsing_of_command(self):
@@ -105,7 +103,21 @@ class TestHardcodeSystem(EvenniaCommandTest):
 
         time.sleep(1)
 
+        logs = "\n".join(self.pc.logs)
         self.assertEqual(len(self.pc.logs) > 0, True)
 
-        logs = "\n".join(self.pc.logs)
         self.assertEqual("MATCHED COMMAND:" in logs, True)
+
+    def test_program_exception(self):
+        self.hc_program.hardcode_content = "thiswill(failNoPeriod)"
+        self.pc.load_program("smoke_test")
+        self.pc.run_program("smoke_test")
+
+        time.sleep(1)
+        logs = "\n".join(self.pc.logs)
+
+        self.assertEqual(self.pc.simulation_thread, None)
+        self.assertEqual(self.pc.failure, True)
+
+        self.assertEqual("ERROR MSG:" in self.pc.last_error , True)
+        self.assertEqual(f"|rProgram failure. Clear error to continue." in self.pc.last_error, True)

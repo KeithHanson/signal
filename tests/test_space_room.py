@@ -5,6 +5,7 @@ from unittest.mock import patch, MagicMock
 from typeclasses.vehicles.base import DefaultSpaceShip
 from typeclasses.objects import Object, SpaceRoom, SpaceRoomDock 
 from typeclasses.objects import CmdPilotLaunch, CmdPilotVehicle, CmdPilotLook, CmdPilotDock
+from prolog.hardcodable import HardcodeProgram
 
 class TestSpaceRoom(EvenniaCommandTest):
     def setUp(self):
@@ -114,3 +115,7 @@ class TestSpaceRoom(EvenniaCommandTest):
 
         self.assertEqual(self.ship.location, self.room1)
         self.assertEqual(len(self.space_room.contents), 1)
+
+    def items_length(self, incoming_dict):
+        return len(list(incoming_dict.items()))
+

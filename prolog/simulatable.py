@@ -66,14 +66,13 @@ class Simulatable:
                         if len(list(self.to_simulate.items())) == 0:
                             return True
                     except Exception as e:
-                        print("!!! SIMULATION THREAD EXCEPTION !!!")
-                        print(f"{self}")
-                        print(e)
+                        error_message = str(e)
+                        # Capture the stack trace
+                        self.last_error = f"|rProgram failure. Clear error to continue.\n|rERROR MSG: {error_message}\n\n|yProgram follows:\n\n==========\n|y{self.program()}"
 
-                        traceback.print_exc()
                         self.failure = True
-
                         self.simulation_thread = None
+                        return False
 
             self.simulation_thread = threading.Thread(target=simulation_loop)
             self.simulation_thread.setDaemon(True)  # Set as a daemon so it exits when main program exits
@@ -81,7 +80,8 @@ class Simulatable:
             
 
     def ignore(self, instance):
-        del self.to_simulate[instance.id]
+        if instance.id in self.to_simulate:
+            del self.to_simulate[instance.id]
 
     def to_fact(self):
         raise Exception("Must be overriden in the base class")

@@ -7,6 +7,8 @@ from typeclasses.vehicles.base import DefaultSpaceShip
 from typeclasses.objects import Object, CmdPilotVehicle, CmdPowerOnVehicle, CmdPilotLaunch, CmdPilotDock, CmdRadarPulse, CmdEngineThrust
 from typeclasses.objects import SpaceRoom, SpaceRoomDock
 
+from prolog.hardcodable import Hardcodable, HardcodeProgram
+
 from evennia import TICKER_HANDLER as tickerhandler
 import time
 
@@ -187,3 +189,47 @@ class TestSubsystems(EvenniaCommandTest):
         time.sleep(1)
         self.run_normal_tick()
         self.call(CmdRadarPulse(), input_args="" )
+
+    def items_length(self, incoming_dict):
+        return len(list(incoming_dict.items()))
+
+    def test_core_computer_smoke_test(self):
+        hc_program = create.create_object( HardcodeProgram, key="smoke_test" )
+        hc_program.hardcode_content = "hello(world). #show hello/1. command(look). #show command/1."
+        core = self.default_core
+        core.debugging = True
+
+        hc_program.move_to(core)
+        self.default_vehicle.chained_power(core, True)
+
+        self.assertEqual(core.load_program("smoke_test"), True)
+        self.assertEqual(core.run_program("smoke_test"), True)
+        self.assertEqual(self.items_length(core.running_programs), 1)
+        self.assertEqual(core.kill_program("smoke_test"), True)
+        self.assertEqual(self.items_length(core.running_programs), 0)
+        self.assertEqual(core.unload_program("smoke_test"), True)
+        self.assertEqual(self.items_length(core.loaded_programs), 0)
+        self.assertEqual(core.run_program("smoke_test"), False)
+        self.assertEqual(self.items_length(core.running_programs), 0)
+
+
+        self.assertEqual(len(core.sensors) > 0, True)
+
+        self.call(CmdPilotLaunch(), "")
+        print(self.call(CmdEngineThrust(), "n"))
+        self.run_normal_tick()
+        self.run_normal_tick()
+        self.run_normal_tick()
+        self.run_normal_tick()
+
+
+        time.sleep(3)
+
+        print(core.view_data_stream())
+        self.assertEqual(core.load_program("smoke_test"), True)
+        self.assertEqual(core.run_program("smoke_test"), True)
+
+        time.sleep(3)
+
+        print("\n".join(core.logs))
+

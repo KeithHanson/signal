@@ -6,6 +6,7 @@ from typeclasses.subsystems.base import Subsystem
 
 import evennia
 
+from textwrap import dedent
 
 # TODO: Provide new commands at power on and remove them at power off
 class Vehicle(Object):
@@ -17,9 +18,11 @@ class Vehicle(Object):
     aiCore = AttributeProperty(None)
 
     def to_fact(self):
-        #%   (B, Ix, Iy, IVx, IVy, Fx, Fy, M, T)
-        #body(1, 0,  0,  0,   0,   1,  0,  1, 0).
-        return f"body({self.id}, {self.newtonian_data['x']}, {self.newtonian_data['y']}, {self.newtonian_data['Vx']}, {self.newtonian_data['Vy']}, {self.newtonian_data['Fx']}, {self.newtonian_data['Fy']}, 1, 0)."
+        return dedent(f"""
+        %    (B, Ix, Iy, IVx, IVy, Fx, Fy, M, T)
+        %body(1, 0,  0,  0,   0,   1,  0,  1, 0).
+        body({self.id}, {self.newtonian_data['x']}, {self.newtonian_data['y']}, {self.newtonian_data['Vx']}, {self.newtonian_data['Vy']}, {self.newtonian_data['Fx']}, {self.newtonian_data['Fy']}, 1, 0).
+        """)
 
     def update_prompt(self, caller):
         if self.pilot:

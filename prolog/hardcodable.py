@@ -60,6 +60,7 @@ class Hardcodable(Object, Simulatable):
 
     def load_program(self, program_key):
         possible_program = self.search(program_key)
+
         if possible_program != None:
             self.loaded_programs[program_key] = possible_program
             self.logs.append(f"Program loaded: {program_key}")
@@ -123,16 +124,23 @@ class Hardcodable(Object, Simulatable):
 
     def parse_clingo_symbols(self, clingo_symbols):
         # This is where we will look for actual commands to fire.
-        if self.debugging:
-            self.logs.append(f"DEBUG: Received truth from last loop:\n******* \n\n{clingo_symbols}")
+        if self.debugging: 
+            self.logs.append("Sensor data:")
+            self.logs.append(self.view_data_stream())
+
+        self.logs.append(f"Received output from last loop: ")
+        self.logs.append(f"{clingo_symbols}")
+
 
         for symbol in clingo_symbols:
             pattern = re.compile(r'command\((.*?)\)')
             match_object = re.match(pattern, str(symbol))
 
             if match_object:
-                self.logs.append("MATCHED COMMAND: ")
-                self.logs.append(match_object.group(1))
+                if self.debugging:
+                    self.logs.append("MATCHED COMMAND: ")
+                self.logs.append("Executing command: " + match_object.group(1))
+                print(self.execute_command(match_object.group(1)))
 
     def add_sensor(self, sensor_obj):
         self.sensors.append(sensor_obj)

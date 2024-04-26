@@ -3,6 +3,10 @@ from evennia import TICKER_HANDLER as tickerhandler
 
 from ..objects import Object
 
+from prolog.hardcodable import Hardcodable
+
+from textwrap import dedent
+
 class Subsystem(Object):
     name = AttributeProperty(default="Subsystem Name")
 
@@ -47,6 +51,13 @@ class Subsystem(Object):
 
         self.db.linkedSubsystems.append(receiver)
         self.save()
+
+    def unlink(self, receiver):
+        if self.linkedSubsystems == None:
+            self.linkedSubsystems = []
+
+        if receiver in self.db.linkedSubsystems:
+            self.db.linkedSubsystems.remove(receiver)
 
     # TODO: Handle damaging power levels
     def at_tick(self):
@@ -121,6 +132,11 @@ class Subsystem(Object):
             if self.location.pilot:
                 self.location.pilot.cmdset.add(self.provides_cmdset_named)
 
+        if isinstance(self, Hardcodable):
+            for item in self.location.contents:
+                if hasattr(item, "to_fact"):
+                    self.add_sensor(item)
+
     def at_power_off(self):
         try:
             tickerhandler.remove(1, self.at_tick)
@@ -142,6 +158,13 @@ class DefaultEngine(Subsystem):
     provides_cmdset_named = "typeclasses.objects.EngineCmdSet"
     name = "Stock Engine"
     HUDname = "engine"
+
+    def to_fact(self):
+        return dedent(f"""
+        % Engine Facts
+        % engine(HUDname, thrustOutputPerLevel, energyConsumedPerTickPerLevel, energyCapacity, storedEnergy).
+        engine({self.HUDname}, {self.thrustOutputPerLevel}, {self.energyConsumedPerTickPerLevel}, {self.energyCapacity}, {self.storedEnergy}).
+        """)
 
     def thrust_north(self):
         desired_thrust_level = self.location.newtonian_data["Fy"] + 1
@@ -197,10 +220,18 @@ class DefaultEngine(Subsystem):
         self.location.newtonian_data["Vy"] = 0
 
 
-class DefaultCore(Subsystem):
+class DefaultCore(Subsystem, Hardcodable):
     energyConsumedPerTickPerLevel = AttributeProperty(default=0)
     name = "Stock AI Core"
     HUDname = "core"
+
+    def execute_command(self, command):
+        if self.location.pilot:
+            print("Executing command.")
+            self.location.pilot.execute_cmd(command)
+
+    def to_fact(self):
+        return self.location.to_fact()
 
 class DefaultReactor(Subsystem):
     energyProvidedPerTick = AttributeProperty(default=10)
@@ -211,6 +242,13 @@ class DefaultReactor(Subsystem):
     energyCapacity = AttributeProperty(default=10)
     HUDname = "reactor"
     name = "Stock Reactor"
+
+    def to_fact(self):
+        return dedent(f"""
+        % Reactor Facts
+        % reactor(HUDname, energyProvidedPerTick, energyTransferredPerTick, EnergyConsumedPerTickPerLevel, fuelConsumedPerTickPerLevel, storedFuel, energyCapacity, storedEnergy).
+        reactor({self.HUDname}, {self.energyProvidedPerTick}, {self.energyTransferredPerTick}, {self.energyConsumedPerTickPerLevel}, {self.fuelConsumedPerTickPerLevel}, {self.storedFuel}, {self.energyCapacity}, {self.storedEnergy}).
+        """)
 
 class DefaultBattery(Subsystem):
     name = "Stock Battery"

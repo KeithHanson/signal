@@ -23,7 +23,6 @@ from evennia.utils import utils
 
 from django.conf import settings
 COMMAND_DEFAULT_CLASS = utils.class_from_module(settings.COMMAND_DEFAULT_CLASS)
-print(COMMAND_DEFAULT_CLASS)
 
 from commands.command import Command
 
