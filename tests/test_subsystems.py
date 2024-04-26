@@ -136,54 +136,54 @@ class TestSubsystems(EvenniaCommandTest):
         self.run_normal_tick()
         self.run_normal_tick()
 
-        print(self.call(CmdEngineThrust(), "n"))
-        print(self.call(CmdEngineThrust(), "e"))
-        print(self.call(CmdRadarPulse(), input_args="" ))
+        self.call(CmdEngineThrust(), "n")
+        self.call(CmdEngineThrust(), "e")
+        self.call(CmdRadarPulse(), input_args="" )
 
         time.sleep(1)
         self.run_normal_tick()
-        print(self.call(CmdEngineThrust(), "w"))
-        print(self.call(CmdRadarPulse(), input_args="" ))
+        self.call(CmdEngineThrust(), "w")
+        self.call(CmdRadarPulse(), input_args="" )
 
         time.sleep(1)
-        print(self.call(CmdEngineThrust(), "w"))
+        self.call(CmdEngineThrust(), "w")
         self.run_normal_tick()
-        print(self.call(CmdRadarPulse(), input_args="" ))
+        self.call(CmdRadarPulse(), input_args="" )
 
         time.sleep(1)
-        print(self.call(CmdEngineThrust(), "e"))
+        self.call(CmdEngineThrust(), "e")
         self.run_normal_tick()
-        print(self.call(CmdRadarPulse(), input_args="" ))
+        self.call(CmdRadarPulse(), input_args="" )
 
-        print(self.call(CmdEngineThrust(), "s"))
-        print(self.call(CmdEngineThrust(), "s"))
-        print(self.call(CmdRadarPulse(), input_args="" ))
-
-        time.sleep(1)
-        self.run_normal_tick()
-        print(self.call(CmdRadarPulse(), input_args="" ))
+        self.call(CmdEngineThrust(), "s")
+        self.call(CmdEngineThrust(), "s")
+        self.call(CmdRadarPulse(), input_args="" )
 
         time.sleep(1)
         self.run_normal_tick()
-        print(self.call(CmdRadarPulse(), input_args="" ))
+        self.call(CmdRadarPulse(), input_args="" )
+
+        time.sleep(1)
+        self.run_normal_tick()
+        self.call(CmdRadarPulse(), input_args="" )
 
         time.sleep(1)
         self.run_normal_tick()
         
-        print(self.call(CmdRadarPulse(), input_args="" ))
+        self.call(CmdRadarPulse(), input_args="" )
 
         time.sleep(1)
         self.run_normal_tick()
-        print(self.call(CmdRadarPulse(), input_args="" ))
+        self.call(CmdRadarPulse(), input_args="" )
 
         time.sleep(1)
         self.run_normal_tick()
-        print(self.call(CmdRadarPulse(), input_args="" ))
+        self.call(CmdRadarPulse(), input_args="" )
 
         time.sleep(1)
         self.run_normal_tick()
-        print(self.call(CmdRadarPulse(), input_args="" ))
+        self.call(CmdRadarPulse(), input_args="" )
 
         time.sleep(1)
         self.run_normal_tick()
-        print(self.call(CmdRadarPulse(), input_args="" ))
+        self.call(CmdRadarPulse(), input_args="" )

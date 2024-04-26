@@ -38,9 +38,9 @@ def solve_simulation(filename, new_terms):
 
     # Retrieve and print the updated model
     updated_model = ctl.get_model()
-    print("Updated Model:")
+    #print("Updated Model:")
     for atom in updated_model.symbols(shown=True):
-        print(atom)
+        #print(atom)
 
 # Example usage
 if __name__ == "__main__":

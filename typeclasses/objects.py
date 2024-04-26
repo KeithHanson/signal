@@ -581,27 +581,25 @@ class SpaceRoom(DefaultRoom, Simulatable):
         return True
 
     def at_init(self):
-        print("Simulation initializing! getting contents.")
+        #print("Simulation initializing! getting contents.")
         for item in self.contents:
             if hasattr(item, "newtonian_data") and hasattr(item, "to_fact"):
                 self.track(item)
         return True
 
-    @classmethod
-    def program(cls):
+    def program(self):
         with open('prolog/moving_bodies_simulation.pl', 'r') as file:
             content = file.read()
         return content
 
-    @classmethod
-    def update(cls, model):
+    def update(self, model):
         for fact in model.symbols(shown=True):
             # print(fact)
             # time_body_position(T, B, Px, Py, Vx, Vy)
             # time_body_position(1,14,20,22,0,0)
             time_step, body, px, py, vx, vy = [int(strPart) for strPart in str(fact).replace("time_body_position(", "").replace(")", "").split(",")]
 
-            entity = cls.to_simulate[body]
+            entity = self.to_simulate[body]
 
             fx = entity.newtonian_data["Fx"]
             fy = entity.newtonian_data["Fy"]

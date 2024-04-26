@@ -5,6 +5,8 @@ from evennia.utils.test_resources import EvenniaTest, EvenniaCommandTest
 from unittest.mock import patch, MagicMock
 from typeclasses.objects import Object
 
+import time
+
 class TestSimulatable(EvenniaCommandTest):
     def setUp(self):
         """Called before every test method"""
@@ -16,8 +18,7 @@ class TestSimulatable(EvenniaCommandTest):
             color="red"
             opposite=None
 
-            @classmethod
-            def program(cls):
+            def program(self):
                 return """
                 color(blue) :- opposite(red).
                 opposite(red) :- color(blue).
@@ -34,14 +35,13 @@ class TestSimulatable(EvenniaCommandTest):
             def to_fact(self):
                 return f"color({self.color})." 
 
-            @classmethod
-            def update(cls, model):
+            def update(self, model):
                 symbol = str(model.symbols(shown=True)[0])
-                key,item = list(cls.to_simulate.items())[0]
+                key,item = list(self.to_simulate.items())[0]
 
-                item.opposite = symbol.split("(")[1].replace(")", "")
+                self.opposite = symbol.split("(")[1].replace(")", "")
 
         sim = MySimulatable()
-        MySimulatable.track(sim)
-        MySimulatable.simulate()
+        sim.track(sim)
+        time.sleep(1)
         self.assertEqual(sim.opposite, "blue")
