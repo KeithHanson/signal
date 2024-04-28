@@ -71,6 +71,7 @@ class Hardcodable(Object, Simulatable):
     def reload(self):
         self.ignore(self)
         self.track(self)
+        return True
 
     def run_program(self, program_key):
         possible_program = self.is_loaded(program_key)

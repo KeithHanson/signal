@@ -209,6 +209,7 @@ class DefaultEngine(Subsystem):
     def thrust_reset(self):
         self.location.newtonian_data["Fx"] = 0
         self.location.newtonian_data["Fy"] = 0
+        return True
 
     def emergency_stop(self):
         self.location.msg_contents("You feel your guts slam around as the emergency stop is performed, alarm sirens blaring.")
@@ -219,11 +220,14 @@ class DefaultEngine(Subsystem):
         self.location.newtonian_data["Vx"] = 0
         self.location.newtonian_data["Vy"] = 0
 
+        return True
+
 
 class DefaultCore(Subsystem, Hardcodable):
     energyConsumedPerTickPerLevel = AttributeProperty(default=0)
     name = "Stock AI Core"
     HUDname = "core"
+    provides_cmdset_named = "typeclasses.objects.CoreCmdSet"
 
     def execute_command(self, command):
         if self.location.pilot:

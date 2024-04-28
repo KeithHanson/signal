@@ -48,7 +48,7 @@ class ObjectParent:
     take precedence.
 
     """
-    newtonian_data = NAttributeProperty(default={"x": 0, "y": 0, "Fx": 0, "Fy": 0, "Vx": 0, "Vy": 0})
+    newtonian_data = NAttributeProperty(default={"x": 0, "y": 0, "Fx": 0, "Fy": 0, "Vx": 0, "Vy": 0, "wasMoving": False})
 
 
 class Object(ObjectParent, DefaultObject):
@@ -431,6 +431,7 @@ class CmdPilotDock(Command):
 
                 ship.move_to(dock.location)
                 ship.msg_contents("You feel your ship tugged by the taxi mechanisms from the dock, placing your ship gently inside.")
+                ship.newtonian_data["wasMoving"] = False
                 return True
 
         ship.msg_contents("Ship could not find a dock.")
@@ -547,6 +548,232 @@ class CmdEngineThrust(Command):
                 if notify_failure:
                     ship.msg_contents("Engine was not able to comply.")
 
+class CmdCoreReload(Command):
+    """
+    Resets your core's processor, clearing and reloading all programs and then starting the simulation again.
+
+    Usage:
+       core reload 
+
+    """
+
+    key = "core reload"
+    aliases = []
+    locks = "cmd:all()"
+    help_category = "aiCores and HardcodePrograms"
+
+    def func(self):
+        caller = self.caller
+        ship = self.caller.location
+        room = ship.location
+
+        core = ship.search("core")
+
+        if core:
+            core.reload()
+            caller.msg("You feel the silicon rearrange itself, and the quantum bits entangling again. The aiCore is simulating again.")
+                
+class CmdCoreLoadProgram(Command):
+    """
+    Load a program into your aiCore, by it's key.
+    This will place the program into the inventory of the aiCore and will take up one of its slots.
+    You can get it back by unloading it.
+
+    Usage:
+       core load program_key 
+    """
+
+    key = "core load"
+    aliases = []
+    locks = "cmd:all()"
+    help_category = "aiCores and HardcodePrograms"
+
+    def func(self):
+        caller = self.caller
+        ship = self.caller.location
+        room = ship.location
+        core = ship.search("core")
+        try:
+            program = core.search(self.args)
+        except:
+            pass
+
+        if not program:
+            try:
+                program = caller.search(self.args)
+            except: 
+                pass
+
+        if not program:
+            #caller.msg(f"Cannot find program: {self.args}")
+            return
+
+        if program and core:
+            program.move_to(core)
+            if core.load_program(self.args):
+                caller.msg(f"The core beeps happily, receiving your program and loading it. Ready to run.")
+            else:
+                caller.msg(f"Core failed to load the program.")
+
+class CmdCoreUnloadProgram(Command):
+    """
+    Unload a program from your aiCore, by it's key.
+    This will place the program back into your inventory from the aiCore and will free up one of its slots.
+    You can get it back by unloading it.
+
+    Usage:
+       core unload program_key 
+    """
+
+    key = "core unload"
+    aliases = []
+    locks = "cmd:all()"
+    help_category = "aiCores and HardcodePrograms"
+
+    def func(self):
+        caller = self.caller
+        ship = self.caller.location
+        room = ship.location
+        core = ship.search("core")
+
+        try:
+            program = core.search(self.args)
+        except: 
+            pass
+
+        if not program:
+            caller.msg(f"Cannot find program: {self.args}")
+
+        if program and core:
+            if core.unload_program(self.args):
+                program.move_to(caller)
+                caller.msg(f"The core chirps, spitting your program out and into your hands. A slot has been freed in the core.")
+            else:
+                caller.msg(f"Core failed to unload the program.")
+
+class CmdCoreRunProgram(Command):
+    """
+    Run a program that has been loaded into your aiCore, by it's key.
+    This will cause your program to be added to the simulation loop.
+
+    Usage:
+       core run program_key 
+    """
+
+    key = "core run"
+    aliases = []
+    locks = "cmd:all()"
+    help_category = "aiCores and HardcodePrograms"
+
+    def func(self):
+        caller = self.caller
+        ship = self.caller.location
+        room = ship.location
+        core = ship.search("core")
+
+        try:
+            program = core.search(self.args)
+        except: 
+            pass
+
+        if not program:
+            caller.msg(f"Cannot find program: {self.args}")
+
+        if program and core:
+            if core.run_program(self.args):
+                caller.msg(f"The core is now running: {self.args}.")
+            else:
+                caller.msg(f"Core failed to run the program. Is it loaded?")
+
+class CmdCoreKillProgram(Command):
+    """
+    Kill a program that is running on your aiCore, by it's key.
+    This will remove that program from your simulation loop.
+
+    Usage:
+       core kill program_key 
+    """
+
+    key = "core kill"
+    aliases = []
+    locks = "cmd:all()"
+    help_category = "aiCores and HardcodePrograms"
+
+    def func(self):
+        caller = self.caller
+        ship = self.caller.location
+        room = ship.location
+        core = ship.search("core")
+
+        try:
+            program = core.search(self.args)
+        except: 
+            pass
+
+        if not program:
+            caller.msg(f"Cannot find program: {self.args}")
+
+        if program and core:
+            if core.kill_program(self.args):
+                caller.msg(f"The core killed: {self.args}.")
+            else:
+                caller.msg(f"Core failed to kill the program. Is it running?")
+
+class CmdCoreShowDataStream(Command):
+    """
+    View a snapshot of the sensor data being fed to your program.
+    These are the facts that allow you to make decisions within your program.
+
+    Usage:
+       core datastream 
+    """
+
+    key = "core datastream"
+    aliases = []
+    locks = "cmd:all()"
+    help_category = "aiCores and HardcodePrograms"
+
+    def func(self):
+        caller = self.caller
+        ship = self.caller.location
+        room = ship.location
+        core = ship.search("core")
+
+        caller.msg(core.view_data_stream())
+
+class CmdCoreShowLogs(Command):
+    """
+    View a the output from loops of your programs.
+
+    Usage:
+       core logs 
+    """
+
+    key = "core logs"
+    aliases = []
+    locks = "cmd:all()"
+    help_category = "aiCores and HardcodePrograms"
+
+    def func(self):
+        caller = self.caller
+        ship = self.caller.location
+        room = ship.location
+        core = ship.search("core")
+
+        caller.msg("\n".join(core.logs))
+
+class CoreCmdSet(CmdSet):
+    def at_cmdset_creation(self):
+        self.add(CmdCoreReload)
+        self.add(CmdCoreLoadProgram)
+        self.add(CmdCoreUnloadProgram)
+        self.add(CmdCoreRunProgram)
+        self.add(CmdCoreKillProgram)
+        #self.add(CmdCoreEditProgram)
+        #self.add(CmdCoreShowSpecs)
+        self.add(CmdCoreShowDataStream)
+        self.add(CmdCoreShowLogs)
+
 class RadarCmdSet(CmdSet):
     def at_cmdset_creation(self):
         self.add(CmdRadarPulse)
@@ -608,7 +835,13 @@ class SpaceRoom(DefaultRoom, Simulatable):
             entity.newtonian_data["Vy"] = vy
 
             if vx > 0 or vx < 0 or vy > 0 or vy < 0:
+                entity.newtonian_data["wasMoving"] = True
                 entity.msg_contents(f"You are moving. \n|rPos: {px},{py} |bVelocity: {vx},{vy} |gForce: {fx}, {fy}|n")
+            else:
+                if entity.newtonian_data["wasMoving"] == True:
+                    entity.newtonian_data["wasMoving"] = False
+                    entity.msg_contents(f"You have come to rest. \n|rPos: {px},{py} |bVelocity: {vx},{vy} |gForce: {fx}, {fy}|n")
+
 
     def at_object_leave(self, moved_obj, target_location, move_type="move", **kwargs):
         try:
