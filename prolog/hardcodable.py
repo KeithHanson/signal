@@ -134,7 +134,7 @@ class Hardcodable(Object, Simulatable):
 
 
         for symbol in clingo_symbols:
-            pattern = re.compile(r'command\((.*?)\)')
+            pattern = re.compile(r'command\("(.*?)"\)')
             match_object = re.match(pattern, str(symbol))
 
             if match_object:
@@ -142,6 +142,7 @@ class Hardcodable(Object, Simulatable):
                     self.logs.append("MATCHED COMMAND: ")
                 self.logs.append("Executing command: " + match_object.group(1))
                #self.logs.append(f"Output from command: {self.execute_command(match_object.group(1))}")
+                self.execute_command(match_object.group(1))    
 
     def add_sensor(self, sensor_obj):
         self.sensors.append(sensor_obj)

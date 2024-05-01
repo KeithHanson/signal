@@ -231,7 +231,6 @@ class DefaultCore(Subsystem, Hardcodable):
 
     def execute_command(self, command):
         if self.location.pilot:
-            print("Executing command.")
             self.location.pilot.execute_cmd(command)
 
     def to_fact(self):

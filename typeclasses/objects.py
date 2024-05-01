@@ -760,7 +760,7 @@ class CmdCoreShowLogs(Command):
         room = ship.location
         core = ship.search("core")
 
-        caller.msg("\n".join(core.logs))
+        caller.msg("\n".join(core.logs[-10:]))
 
 class CoreCmdSet(CmdSet):
     def at_cmdset_creation(self):
