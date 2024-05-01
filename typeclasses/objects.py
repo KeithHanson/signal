@@ -810,6 +810,50 @@ class CmdCoreClearError(Command):
 
         caller.msg("The core beeps happily and starts simulating again.")
 
+class CmdProgramEdit(Command):
+    """
+    Edit a program with an interactive editor. Insert, delete, replace functions.
+
+    Usage:
+        program edit NAME
+    """
+    key = "program edit"
+    aliases = []
+    locks = "cmd:all()"
+    help_category = "aiCores and HardcodePrograms"
+
+    def func(self):
+        caller = self.caller
+        target = caller.search(self.args)
+
+        if not target:
+            return
+
+        if hasattr(target, "hardcode_content"):
+            target.edit_program(caller)
+
+class CmdProgramTest(Command):
+    """
+    Test a program. You must be near a core so that the program can be tested with sensor data.
+
+    Usage:
+        program test NAME
+    """
+    key = "program test"
+    aliases = []
+    locks = "cmd:all()"
+    help_category = "aiCores and HardcodePrograms"
+
+    def func(self):
+        caller = self.caller
+        target = caller.search(self.args)
+
+        if not target:
+            return
+
+        if hasattr(target, "hardcode_content"):
+            target.test_program(caller)
+
 class CoreCmdSet(CmdSet):
     def at_cmdset_creation(self):
         self.add(CmdCoreReload)
@@ -823,6 +867,8 @@ class CoreCmdSet(CmdSet):
         self.add(CmdCoreShowLogs)
         self.add(CmdCoreShowLastError)
         self.add(CmdCoreClearError)
+        self.add(CmdProgramEdit)
+        self.add(CmdProgramTest)
 
 class RadarCmdSet(CmdSet):
     def at_cmdset_creation(self):

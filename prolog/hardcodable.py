@@ -8,6 +8,10 @@ from evennia.typeclasses.attributes import NAttributeProperty
 from typeclasses.objects import Object
 from prolog.simulatable import Simulatable
 import re
+from evennia.utils.eveditor import EvEditor
+import traceback
+
+
 
 class Hardcodable(Object, Simulatable):
     program_slots = AttributeProperty(default=4)
@@ -177,11 +181,43 @@ class HardcodeProgram(Object):
     def to_fact(self):
         return self.hardcode_content
 
-    def edit_program(self):
-        pass
+    def editor_load(self, caller):
+        return self.hardcode_content 
 
-    def save_program(self):
-        pass
+    def editor_save(self, caller, buffer):
+        self.hardcode_content = buffer.strip()
+        self.save()
 
-    def test_program(self):
-        pass
+    def editor_quit(self, caller):
+        caller.msg("You watch as the program's circuits shift to your whims.")
+
+    def edit_program(self, caller):
+        EvEditor(caller, loadfunc=self.editor_load, savefunc=self.editor_save, quitfunc=self.editor_quit, key=self.key)
+
+    def test_program(self, caller):
+        try:
+            ctl = clingo.Control()
+            core = caller.search("core")
+
+            if not core:
+                caller.msg("A core must be nearby to test this program.")
+                return False
+
+            program = "\n".join([ sensor.to_fact() for sensor in core.sensors]) + self.hardcode_content
+
+            with ctl.builder() as bld:
+                clingo.parse_program(prg, lambda stm: bld.add(stm))
+
+            ctl.ground([("base", [])])
+            
+            def on_clingo_model(model):
+                caller.msg("|gThe program beeps softly to get your attention. The test is complete.")
+                caller.msg(f"|b{program}")
+                for symbol in model.symbols(shown=True):
+                    caller.msg(f"|y{symbol}")
+                
+            ctl.solve(on_model=on_clingo_model)
+            ctl.cleanup()
+        except RuntimeError as e:
+            caller.msg(e.__cause__)
+            caller.msg(traceback.format_exc())
