@@ -195,7 +195,7 @@ class TestSubsystems(EvenniaCommandTest):
 
     def test_core_computer_smoke_test(self):
         hc_program = create.create_object( HardcodeProgram, key="smoke_test" )
-        hc_program.hardcode_content = "hello(world). #show hello/1. command(look). #show command/1."
+        hc_program.hardcode_content = "hello(world). #show hello/1. command(\"look\"). #show command/1."
         core = self.default_core
         core.debugging = True
 

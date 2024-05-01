@@ -762,6 +762,54 @@ class CmdCoreShowLogs(Command):
 
         caller.msg("\n".join(core.logs[-10:]))
 
+class CmdCoreShowLastError(Command):
+    """
+    View the output of the last error that stopped your core's simulation.
+
+    Usage:
+       core error 
+    """
+
+    key = "core error"
+    aliases = []
+    locks = "cmd:all()"
+    help_category = "aiCores and HardcodePrograms"
+
+    def func(self):
+        caller = self.caller
+        ship = self.caller.location
+        room = ship.location
+        core = ship.search("core")
+
+        caller.msg("|yThe core beeps grumpily, spitting out the error.") 
+        caller.msg(core.last_error)
+
+class CmdCoreClearError(Command):
+    """
+    Clear the error state from your core to begin the simulation again.
+
+    Usage:
+       core clear error
+    """
+
+    key = "core clear error"
+    aliases = []
+    locks = "cmd:all()"
+    help_category = "aiCores and HardcodePrograms"
+
+    def func(self):
+        caller = self.caller
+        ship = self.caller.location
+        room = ship.location
+        core = ship.search("core")
+
+        core.clear_failure()
+        core.last_error = None
+        core.failure = False
+        core.reload()
+
+        caller.msg("The core beeps happily and starts simulating again.")
+
 class CoreCmdSet(CmdSet):
     def at_cmdset_creation(self):
         self.add(CmdCoreReload)
@@ -773,6 +821,8 @@ class CoreCmdSet(CmdSet):
         #self.add(CmdCoreShowSpecs)
         self.add(CmdCoreShowDataStream)
         self.add(CmdCoreShowLogs)
+        self.add(CmdCoreShowLastError)
+        self.add(CmdCoreClearError)
 
 class RadarCmdSet(CmdSet):
     def at_cmdset_creation(self):
@@ -825,22 +875,23 @@ class SpaceRoom(DefaultRoom, Simulatable):
             # time_body_position(1,14,20,22,0,0)
             time_step, body, px, py, vx, vy = [int(strPart) for strPart in str(fact).replace("time_body_position(", "").replace(")", "").split(",")]
 
-            entity = self.to_simulate[body]
+            if body in self.to_simulate:
+                entity = self.to_simulate[body]
 
-            fx = entity.newtonian_data["Fx"]
-            fy = entity.newtonian_data["Fy"]
-            entity.newtonian_data["x"] = px
-            entity.newtonian_data["y"] = py
-            entity.newtonian_data["Vx"] = vx
-            entity.newtonian_data["Vy"] = vy
+                fx = entity.newtonian_data["Fx"]
+                fy = entity.newtonian_data["Fy"]
+                entity.newtonian_data["x"] = px
+                entity.newtonian_data["y"] = py
+                entity.newtonian_data["Vx"] = vx
+                entity.newtonian_data["Vy"] = vy
 
-            if vx > 0 or vx < 0 or vy > 0 or vy < 0:
-                entity.newtonian_data["wasMoving"] = True
-                entity.msg_contents(f"You are moving. \n|rPos: {px},{py} |bVelocity: {vx},{vy} |gForce: {fx}, {fy}|n")
-            else:
-                if entity.newtonian_data["wasMoving"] == True:
-                    entity.newtonian_data["wasMoving"] = False
-                    entity.msg_contents(f"You have come to rest. \n|rPos: {px},{py} |bVelocity: {vx},{vy} |gForce: {fx}, {fy}|n")
+                if vx > 0 or vx < 0 or vy > 0 or vy < 0:
+                    entity.newtonian_data["wasMoving"] = True
+                    entity.msg_contents(f"You are moving. \n|rPos: {px},{py} |bVelocity: {vx},{vy} |gForce: {fx}, {fy}|n")
+                else:
+                    if entity.newtonian_data["wasMoving"] == True:
+                        entity.newtonian_data["wasMoving"] = False
+                        entity.msg_contents(f"You have come to rest. \n|rPos: {px},{py} |bVelocity: {vx},{vy} |gForce: {fx}, {fy}|n")
 
 
     def at_object_leave(self, moved_obj, target_location, move_type="move", **kwargs):

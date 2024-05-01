@@ -96,7 +96,7 @@ class TestHardcodeSystem(EvenniaCommandTest):
 
 
     def test_program_run_and_parsing_of_command(self):
-        self.hc_program.hardcode_content = "hello(world). #show hello/1. command(look). #show command/1."
+        self.hc_program.hardcode_content = "hello(world). #show hello/1. command(\"look\"). #show command/1."
         self.pc.load_program("smoke_test")
         self.pc.run_program("smoke_test")
         self.pc.debugging = True

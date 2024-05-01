@@ -101,6 +101,7 @@ class Hardcodable(Object, Simulatable):
     def unload_program(self, program_key):
         possible_program = self.is_loaded(program_key)
         if possible_program:
+            self.kill_program(program_key)
             del self.loaded_programs[program_key]
 
         # If it's NOT in loaded_programs, it's def not loaded?
@@ -145,12 +146,16 @@ class Hardcodable(Object, Simulatable):
                 self.execute_command(match_object.group(1))    
 
     def add_sensor(self, sensor_obj):
-        self.sensors.append(sensor_obj)
+        if not sensor_obj in self.sensors:
+            self.sensors.append(sensor_obj)
+
         self.logs.append(f"Sensor connected: {sensor_obj}")
         return True
 
     def remove_sensor(self, sensor_obj):
-        self.sensors.remove(sensor_obj)
+        if sensor_obj in self.sensors:
+            self.sensors.remove(sensor_obj)
+
         self.logs.append(f"Sensor disconnected: {sensor_obj}")
         return True
 
