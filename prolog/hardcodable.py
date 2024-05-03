@@ -205,9 +205,7 @@ class HardcodeProgram(Object):
 
             program = "\n".join([ sensor.to_fact() for sensor in core.sensors]) + self.hardcode_content
 
-            with ctl.builder() as bld:
-                clingo.parse_program(prg, lambda stm: bld.add(stm))
-
+            ctl.add('base', [], program)
             ctl.ground([("base", [])])
             
             def on_clingo_model(model):
