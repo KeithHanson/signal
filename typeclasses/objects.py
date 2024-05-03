@@ -719,6 +719,72 @@ class CmdCoreKillProgram(Command):
             else:
                 caller.msg(f"Core failed to kill the program. Is it running?")
 
+class CmdCoreShowLoadedPrograms(Command):
+    """
+    Show the loaded programs.
+
+    Usage:
+       core ls 
+    """
+
+    key = "core ls"
+    aliases = []
+    locks = "cmd:all()"
+    help_category = "aiCores and HardcodePrograms"
+
+    def func(self):
+        caller = self.caller
+        ship = self.caller.location
+        room = ship.location
+        core = ship.search("core")
+
+        caller.msg("The core beeps and dutifully provides the list of loaded programs.")
+        caller.msg(", ".join(program for program in core.loaded_programs))
+
+class CmdCoreShowRunningPrograms(Command):
+    """
+    Show the loaded programs.
+
+    Usage:
+       core ps 
+    """
+
+    key = "core ps"
+    aliases = []
+    locks = "cmd:all()"
+    help_category = "aiCores and HardcodePrograms"
+
+    def func(self):
+        caller = self.caller
+        ship = self.caller.location
+        room = ship.location
+        core = ship.search("core")
+
+        caller.msg("The core beeps and dutifully provides the list of running programs.")
+        caller.msg(", ".join(program for program in core.running_programs))
+
+class CmdCoreToggleNoisy(Command):
+    """
+    Have the core report every simulation loops' output.
+
+    Usage:
+       core noisy 
+    """
+
+    key = "core noisy"
+    aliases = []
+    locks = "cmd:all()"
+    help_category = "aiCores and HardcodePrograms"
+
+    def func(self):
+        caller = self.caller
+        ship = self.caller.location
+        room = ship.location
+        core = ship.search("core")
+
+        core.noisy = not core.noisy
+
+
 class CmdCoreShowDataStream(Command):
     """
     View a snapshot of the sensor data being fed to your program.
@@ -869,6 +935,9 @@ class CoreCmdSet(CmdSet):
         self.add(CmdCoreClearError)
         self.add(CmdProgramEdit)
         self.add(CmdProgramTest)
+        self.add(CmdCoreShowLoadedPrograms)
+        self.add(CmdCoreShowRunningPrograms)
+        self.add(CmdCoreToggleNoisy)
 
 class RadarCmdSet(CmdSet):
     def at_cmdset_creation(self):

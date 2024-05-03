@@ -28,6 +28,8 @@ class Hardcodable(Object, Simulatable):
 
     debugging = NAttributeProperty(default=False)
 
+    noisy = False
+
     def to_fact(self):
         return ""
 
@@ -136,6 +138,9 @@ class Hardcodable(Object, Simulatable):
 
         self.logs.append(f"Received output from last loop: ")
         self.logs.append(f"{clingo_symbols}")
+        if self.noisy:
+            self.location.msg_contents(f"The core bleeps and bloops noisily.")
+            self.location.msg_contents(f"Simulation Truths: {clingo_symbols}")
 
 
         for symbol in clingo_symbols:

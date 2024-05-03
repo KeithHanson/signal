@@ -83,6 +83,8 @@ class Vehicle(Object):
         if not self.pilot.cmdset.has("typeclasses.objects.VehiclePilotingCmdSet"):
             self.pilot.cmdset.add("typeclasses.objects.VehiclePilotingCmdSet")
 
+        self.at_power_on()
+
 
     def at_pilot_exit(self, pilot):
         self.pilot = None
