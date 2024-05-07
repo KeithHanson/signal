@@ -11,8 +11,6 @@ from textwrap import dedent
 # TODO: Provide new commands at power on and remove them at power off
 class Vehicle(Object):
     armor = AttributeProperty(default=0)
-    pilot = AttributeProperty(None)
-
     powered = AttributeProperty(False)
     
     aiCore = AttributeProperty(None)
@@ -25,8 +23,8 @@ class Vehicle(Object):
         """)
 
     def update_prompt(self, caller):
-        if self.pilot:
-            self.pilot.msg(prompt=self.get_prompt_text())
+        if self.aiCore:
+            self.aiCore.msg(prompt=self.get_prompt_text())
 
     def get_prompt_text(self):
         powered_color = "|g" if self.powered else "|r"
@@ -51,13 +49,11 @@ class Vehicle(Object):
         if self.powered:
             return (str(self.db.desc) + " " if self.db.desc != None else "") + "The vehicle hums quietly, powered and ready for flight."
         else:
-            return (str(self.db.desc) + " " if self.db.desc != None else "") + "The vehicle sits silently, powered off, awaiting it's pilot."
+            return (str(self.db.desc) + " " if self.db.desc != None else "") + "The vehicle sits silently, powered off."
 
     def at_object_creation(self):
-        core = evennia.create_object('subsystems.base.DefaultCore', key="stock_core", location=self, aliases=["core"])
-
+        # Build and link everything but a core (which will be the player)
         reactor = evennia.create_object('subsystems.base.DefaultReactor', key="stock_reactor", location=self, aliases=["reactor"])
-        core.link_to(reactor)
 
         battery = evennia.create_object('subsystems.base.DefaultBattery', key="stock_battery", location=self, aliases=["battery"])
         reactor.link_to(battery)
@@ -68,8 +64,9 @@ class Vehicle(Object):
         radar = evennia.create_object('subsystems.base.DefaultRadar', key="stock_radar", location=self, aliases=["radar"])
         battery.link_to(radar)
 
-        self.aiCore = core
         self.save()
+
+        self.cmdset.add("typeclasses.objects.VehiclePilotingCmdSet", persistent=True)
 
     def chained_power(self, subsys, powerOn):
         if powerOn:
@@ -82,16 +79,15 @@ class Vehicle(Object):
 
     def at_power_on(self):
         self.powered = True
-        self.pilot.msg("You feel the engines rumble to life. Your HUD begins to boot, and blinking lights spring to life.")
+        self.aiCore.msg("Ship power sequence activated.")
 
-        self.location.msg("You feel a rumble in your chest as {key} powers up and begins levitating.")
         self.chained_power(self.aiCore, True)
 
 
     def at_power_off(self):
         self.powered = False
         self.location.msg("As the vehicle powers off, it lands softly on the ground.")
-        self.pilot.msg("You feel the vehicle land softly and watch as your subsystems power off.")
+        self.aiCore.msg("You feel the vehicle land softly and watch as your subsystems power off.")
         self.chained_power(self.aiCore, False)
 
     def at_object_delete(self):

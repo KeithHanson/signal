@@ -39,7 +39,10 @@ class Hardcodable(Object, Simulatable):
 
     def program(self):
         # Gather terms from all the sensors, these are our facts.
-        fact_section = "\n".join([ sensor.to_fact() for sensor in self.sensors])
+        current_time = int(time.time())
+        prepend = f"currentTime({current_time}).\n" 
+
+        fact_section = prepend + "\n".join([ sensor.to_fact() for sensor in self.sensors])
         # Inject the running programs beneath the sensor data
         program_section = "\n".join([ program.to_fact() for _, program in self.running_programs.items()])
 
@@ -139,8 +142,8 @@ class Hardcodable(Object, Simulatable):
         self.logs.append(f"Received output from last loop: ")
         self.logs.append(f"{clingo_symbols}")
         if self.noisy:
-            self.location.msg_contents(f"The core bleeps and bloops noisily.")
-            self.location.msg_contents(f"Simulation Truths: {clingo_symbols}")
+            self.location.msg_contents("")
+            self.location.msg_contents(f"Simulation Truths: \n{clingo_symbols}")
 
 
         for symbol in clingo_symbols:
@@ -175,7 +178,9 @@ class Hardcodable(Object, Simulatable):
             if hasattr(sensor, "to_fact") and sensor.to_fact() != None:
                 output.append(sensor.to_fact())
 
-        return "\n".join(output)
+        current_time = int(time.time())
+        prepend = f"currentTime({current_time}).\n" 
+        return prepend + "\n".join(output)
 
     def execute_command(self, command):
         # this attempts to execute a real evennia mud command as the player
@@ -186,7 +191,6 @@ class HardcodeProgram(Object):
 
     def __str__(self):
         return f"{self.key} \n\n {self.hardcode_content}"
-
 
     def to_fact(self):
         return self.hardcode_content
@@ -199,7 +203,7 @@ class HardcodeProgram(Object):
         self.save()
 
     def editor_quit(self, caller):
-        caller.msg("You watch as the program's circuits shift to your whims.")
+        caller.msg(f"Edit complete. HardcodeProgram |g{self.key}|n saved.")
 
     def edit_program(self, caller):
         EvEditor(caller, loadfunc=self.editor_load, savefunc=self.editor_save, quitfunc=self.editor_quit, key=self.key)
@@ -207,10 +211,10 @@ class HardcodeProgram(Object):
     def test_program(self, caller):
         try:
             ctl = clingo.Control()
-            core = caller.search("core")
+            core = caller
 
             if not core:
-                caller.msg("A core must be nearby to test this program.")
+                core.msg("A core must be nearby to test this program.")
                 return False
 
             program = "\n".join([ sensor.to_fact() for sensor in core.sensors]) + self.hardcode_content
@@ -219,13 +223,13 @@ class HardcodeProgram(Object):
             ctl.ground([("base", [])])
             
             def on_clingo_model(model):
-                caller.msg("|gThe program beeps softly to get your attention. The test is complete.")
-                caller.msg(f"|b{program}")
+                core.msg("|gThe program beeps softly to get your attention. The test is complete.")
+                core.msg(f"|b{program}")
                 for symbol in model.symbols(shown=True):
-                    caller.msg(f"|y{symbol}")
+                    core.msg(f"|y{symbol}")
                 
             ctl.solve(on_model=on_clingo_model)
             ctl.cleanup()
         except RuntimeError as e:
-            caller.msg(e.__cause__)
-            caller.msg(traceback.format_exc())
+            core.msg(e.__cause__)
+            core.msg(traceback.format_exc())

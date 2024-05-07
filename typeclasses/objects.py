@@ -823,6 +823,71 @@ class CmdCoreClearError(Command):
 
         caller.msg("Core simulation loop started.")
 
+class CmdCoreShowProgram(Command):
+    """
+    Show the entire program the core will run in the loop.
+
+    Usage:
+       core show program
+    """
+
+    key = "core show program"
+    aliases = []
+    locks = "cmd:false()"
+    help_category = "aiCores and HardcodePrograms"
+
+    def func(self):
+        caller = self.caller
+
+        caller.msg("|yCore simulation loop:")
+        caller.msg(f"|b{caller.program()}")
+
+class CmdCoreLinkTo(Command):
+    """
+    Link your core to another subsystem. If you provide two arguments, it will link that system to the other system.
+
+    Usage:
+        core link SUBSYSTEM [OTHER_SUBSYSTEM]
+
+    Example:
+        core link reactor
+        core link reactor battery
+        core link battery radar
+        core link battery engine
+    """
+    key = "core link"
+    aliases = []
+    locks = "cmd:false()"
+    help_category = "aiCores and HardcodePrograms"
+
+    def func(self):
+        caller = self.caller
+
+        if not self.args:
+            caller.msg("|rError. |yMust provide at least |gone subsystem |yto link the |bcore|y to, or |gtwo subsystems|n to link together.")
+
+        arg1 = self.args.split(" ")[0]
+
+        arg2 = self.args.split(" ")[-1]
+
+        if arg1 == arg2:
+            target = caller.search(arg1)
+
+            if caller.link_to(target):
+                caller.msg(f"Core linked to {arg1} successfully.")
+
+        else:
+            first_subsystem = caller.search(arg1)
+            if not first_subsystem:
+                return
+
+            second_subsystem = caller.search(arg2)
+            if not second_subsystem:
+                return
+
+            if first_subsystem.link_to(second_subsystem):
+                caller.msg(f"{arg1} linked to {arg2} successfully")
+
 class CmdProgramEdit(Command):
     """
     Edit a program with an interactive editor. Insert, delete, replace functions.
@@ -837,13 +902,17 @@ class CmdProgramEdit(Command):
 
     def func(self):
         caller = self.caller
-        target = caller.search(self.args)
+        if self.args != '':
+            target = caller.search(self.args)
 
-        if not target:
-            return
+            if not target:
+                target = create.create_object("prolog.hardcodable.HardcodeProgram", key=self.args )
+                target.location = caller
 
-        if hasattr(target, "hardcode_content"):
-            target.edit_program(caller)
+            if hasattr(target, "hardcode_content"):
+                target.edit_program(caller)
+        else:
+            caller.msg("You must provide a name of the program to edit.")
 
 class CmdProgramTest(Command):
     """
@@ -885,6 +954,8 @@ class CoreCmdSet(CmdSet):
         self.add(CmdCoreShowLoadedPrograms)
         self.add(CmdCoreShowRunningPrograms)
         self.add(CmdCoreToggleNoisy)
+        self.add(CmdCoreLinkTo)
+        self.add(CmdCoreShowProgram)
 
 class RadarCmdSet(CmdSet):
     def at_cmdset_creation(self):
@@ -899,7 +970,6 @@ class VehiclePilotingCmdSet(CmdSet):
         self.add(CmdDisembarkVehicle())
         self.add(CmdPowerOnVehicle())
         self.add(CmdPowerOffVehicle())
-        self.add(CmdPilotLook())
         self.add(CmdPilotLaunch())
         self.add(CmdPilotDock())
 

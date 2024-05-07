@@ -53,6 +53,7 @@ class Subsystem(Object):
 
         self.db.linkedSubsystems.append(receiver)
         self.save()
+        return True
 
     def unlink(self, receiver):
         if self.linkedSubsystems == None:
@@ -289,6 +290,13 @@ class DefaultBattery(Subsystem):
     energyConsumedPerTickPerLevel = AttributeProperty(default=0)
     energyTransferredPerTick = AttributeProperty(default=5)
 
+    def to_fact(self):
+        return dedent(f"""
+        %Battery Facts
+        %battery(HUDname, energyTransferredPerTick, energyCapacity, storedEnergy).
+        battery({self.HUDname}, {self.energyTransferredPerTick}, {self.energyCapacity}, {self.storedEnergy}).
+        """)
+
 class DefaultRadar(Subsystem):
     energyCapacity = AttributeProperty(default=10)
     energyConsumedPerTickPerLevel = AttributeProperty(default=1)
@@ -296,13 +304,30 @@ class DefaultRadar(Subsystem):
     HUDname = "radar"
     provides_cmdset_named = "typeclasses.objects.RadarCmdSet"
 
+    def to_fact(self):
+        return dedent(f"""
+        %Radar Facts
+
+        %radar(HUDname, energyConsumedPerTickPerLevel, energyCapacity, storedEnergy).
+        radar({self.HUDname}, {self.energyConsumedPerTickPerLevel}, {self.energyCapacity}, {self.storedEnergy}).
+
+        %Radar Last Pulse Location, -1,-1 if never pulsed.
+        %lastPulseLocation(X, Y)
+        %lastPulseLocation(-1,-1).
+
+        %Radar Last Pulse Targets
+        %pulseResult(#ID, X, Y).
+        """)
+
     def pulse(self, caller, space_room):
         power_draw = self.energyConsumedPerTickPerLevel * self.assignedEnergyLevel
+
         if self.storedEnergy >= power_draw:
             self.storedEnergy -= power_draw
             # Basic implementation, render the map perfectly from the space_room
             caller.msg("")
             caller.msg(space_room.render_map(caller))
             caller.msg("You feel a brief burst of electrical energy as your radar pulses and its capacitors drain.")
+
         else:
             caller.msg("Your radar doesn't have enough energy to pulse yet.")
