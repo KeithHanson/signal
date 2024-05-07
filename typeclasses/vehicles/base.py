@@ -71,31 +71,6 @@ class Vehicle(Object):
         self.aiCore = core
         self.save()
 
-    def at_pilot_enter(self, pilot):
-        self.location.msg_contents("$You() $conj(open) the hatch and $conj(enter) the vehicle, the seal closing with a hiss.", from_obj=pilot)
-        self.pilot = pilot
-
-        if self.pilot.location == self:
-            self.pilot.msg("You place your hands gently on the controls, feeling the ship humming, ready for input.")
-        else:
-            pilot.location = self
-
-        if not self.pilot.cmdset.has("typeclasses.objects.VehiclePilotingCmdSet"):
-            self.pilot.cmdset.add("typeclasses.objects.VehiclePilotingCmdSet")
-
-        self.at_power_on()
-
-
-    def at_pilot_exit(self, pilot):
-        self.pilot = None
-
-        self.msg_contents("The vehicle door opens with a hiss as the airlock unseals, and $You() $conj(exit) the vehicle.", from_obj=pilot)
-        self.location.msg_contents("The vehicle door opens with a hiss as the airlock unseals, and $You() $conj(exit) the vehicle.", from_obj=pilot)
-
-        pilot.move_to(self.location)
-
-        pilot.cmdset.delete("typeclasses.objects.VehiclePilotingCmdSet")
-
     def chained_power(self, subsys, powerOn):
         if powerOn:
             subsys.at_power_on()

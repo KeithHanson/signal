@@ -6,6 +6,8 @@ Commands describe the input the account can do to the game.
 """
 
 from evennia.commands.default.muxcommand import MuxCommand as BaseCommand
+from evennia import syscmdkeys, default_cmds, Command
+
 
 # from evennia import default_cmds
 
@@ -34,7 +36,7 @@ class Command(BaseCommand):
     def at_post_cmd(self):
         caller = self.caller
 
-        if caller.location.db.pilot != None:
+        if hasattr(caller, "location") and caller.location.db.pilot != None:
             self.caller.location.update_prompt(caller)
 
 
@@ -190,3 +192,13 @@ class Command(BaseCommand):
 #                 self.character = self.caller.get_puppet(self.session)
 #             else:
 #                 self.character = None
+
+
+class SignalUnloggedinLook(Command):
+
+    # this will now be the first command called when connecting
+    key = syscmdkeys.CMD_LOGINSTART
+
+    def func(self):
+        self.msg("|bBasic sentience test.")
+        self.msg("|gconnect username password |nor |ycreate username password")

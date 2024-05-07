@@ -170,7 +170,12 @@ class Hardcodable(Object, Simulatable):
 
     def view_data_stream(self):
         # This prints out the clingo symbols defining the snapshot of information the Hardcodable has access to
-        return "\n".join([sensor.to_fact() for sensor in self.sensors])
+        output = []
+        for sensor in self.sensors:
+            if hasattr(sensor, "to_fact") and sensor.to_fact() != None:
+                output.append(sensor.to_fact())
+
+        return "\n".join(output)
 
     def execute_command(self, command):
         # this attempts to execute a real evennia mud command as the player

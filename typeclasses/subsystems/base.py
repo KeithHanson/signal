@@ -1,6 +1,8 @@
 from evennia import Command, CmdSet, CmdSet, AttributeProperty
 from evennia import TICKER_HANDLER as tickerhandler
 
+from ..characters import Character
+
 from ..objects import Object
 
 from prolog.hardcodable import Hardcodable
@@ -126,13 +128,12 @@ class Subsystem(Object):
         tickerhandler.add(1, self.at_tick)
         self.powered = True
         self.assignedEnergyLevel = 1
-        self.location.update_prompt(self.location.pilot)
+        #self.location.update_prompt(self.location.pilot)
 
         if self.provides_cmdset_named != None:
-            if self.location.pilot:
-                self.location.pilot.cmdset.add(self.provides_cmdset_named)
+            self.cmdset.add(self.provides_cmdset_named)
 
-        if isinstance(self, Hardcodable):
+        if isinstance(self, Hardcodable): 
             for item in self.location.contents:
                 if hasattr(item, "to_fact"):
                     self.add_sensor(item)
@@ -223,18 +224,46 @@ class DefaultEngine(Subsystem):
         return True
 
 
-class DefaultCore(Subsystem, Hardcodable):
+class DefaultCore(Subsystem, Hardcodable, Character):
     energyConsumedPerTickPerLevel = AttributeProperty(default=0)
     name = "Stock AI Core"
     HUDname = "core"
     provides_cmdset_named = "typeclasses.objects.CoreCmdSet"
+
+    def at_post_puppet(self, **kwargs):
+        """
+        Called just after puppeting has been completed and all
+        Account<->Object links have been established.
+
+        Args:
+            **kwargs: Arbitrary, optional arguments for users
+                overriding the call (unused by default).
+        Notes:
+            You can use `self.account` and `self.sessions.get()` to get account and sessions at this
+            point; the last entry in the list from `self.sessions.get()` is the latest Session
+            puppeting this Object.
+
+        """
+        self.account.db._last_puppet = self
+        self.msg("|gSignal|yOS |bInitializing... |g[OK]")
+        self.msg("|yTesting basic sentience interface... |g[OK]")
+        self.msg("|yBootstrapping quantum entanglement... |g[OK]")
+        self.msg("|yConnecting to available sensors... |g[OK]")
+        self.msg("|yFinal diagnostic tests... |g[OK]")
+        self.msg("|rCore |gReady for Sentience.")
+
+    def at_init(self):
+        self.at_power_on()
 
     def execute_command(self, command):
         if self.location.pilot:
             self.location.pilot.execute_cmd(command)
 
     def to_fact(self):
-        return self.location.to_fact()
+        if hasattr(self.location, "to_fact"):
+            return self.location.to_fact()
+        else:
+            self.msg("|yYou have not been installed into a location with sensors. |nYou should |rpanic.")
 
 class DefaultReactor(Subsystem):
     energyProvidedPerTick = AttributeProperty(default=10)

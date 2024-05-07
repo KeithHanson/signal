@@ -559,19 +559,13 @@ class CmdCoreReload(Command):
 
     key = "core reload"
     aliases = []
-    locks = "cmd:all()"
+    locks = "cmd:false()"
     help_category = "aiCores and HardcodePrograms"
 
     def func(self):
         caller = self.caller
-        ship = self.caller.location
-        room = ship.location
-
-        core = ship.search("core")
-
-        if core:
-            core.reload()
-            caller.msg("You feel the silicon rearrange itself, and the quantum bits entangling again. The aiCore is simulating again.")
+        caller.reload()
+        caller.msg("Core reloaded.")
                 
 class CmdCoreLoadProgram(Command):
     """
@@ -585,41 +579,28 @@ class CmdCoreLoadProgram(Command):
 
     key = "core load"
     aliases = []
-    locks = "cmd:all()"
+    locks = "cmd:false()"
     help_category = "aiCores and HardcodePrograms"
 
     def func(self):
         caller = self.caller
-        ship = self.caller.location
-        room = ship.location
-        core = ship.search("core")
         try:
-            program = core.search(self.args)
+            program = caller.search(self.args)
         except:
             pass
 
         if not program:
-            try:
-                program = caller.search(self.args)
-            except: 
-                pass
-
-        if not program:
-            #caller.msg(f"Cannot find program: {self.args}")
             return
 
-        if program and core:
-            program.move_to(core)
-            if core.load_program(self.args):
-                caller.msg(f"The core beeps happily, receiving your program and loading it. Ready to run.")
+        if program:
+            if caller.load_program(self.args):
+                caller.msg(f"Program ready to |grun.")
             else:
-                caller.msg(f"Core failed to load the program.")
+                caller.msg(f"|rFailed to load the program.")
 
 class CmdCoreUnloadProgram(Command):
     """
-    Unload a program from your aiCore, by it's key.
-    This will place the program back into your inventory from the aiCore and will free up one of its slots.
-    You can get it back by unloading it.
+    Unload a program from your Core, by it's key. This will free up a slot.
 
     Usage:
        core unload program_key 
@@ -627,27 +608,22 @@ class CmdCoreUnloadProgram(Command):
 
     key = "core unload"
     aliases = []
-    locks = "cmd:all()"
+    locks = "cmd:false()"
     help_category = "aiCores and HardcodePrograms"
 
     def func(self):
         caller = self.caller
-        ship = self.caller.location
-        room = ship.location
-        core = ship.search("core")
-
         try:
-            program = core.search(self.args)
+            program = caller.search(self.args)
         except: 
             pass
 
         if not program:
             caller.msg(f"Cannot find program: {self.args}")
 
-        if program and core:
-            if core.unload_program(self.args):
-                program.move_to(caller)
-                caller.msg(f"The core chirps, spitting your program out and into your hands. A slot has been freed in the core.")
+        if program:
+            if caller.unload_program(self.args):
+                caller.msg(f"A slot has been freed in the core.")
             else:
                 caller.msg(f"Core failed to unload the program.")
 
@@ -662,25 +638,22 @@ class CmdCoreRunProgram(Command):
 
     key = "core run"
     aliases = []
-    locks = "cmd:all()"
+    locks = "cmd:false()"
     help_category = "aiCores and HardcodePrograms"
 
     def func(self):
         caller = self.caller
-        ship = self.caller.location
-        room = ship.location
-        core = ship.search("core")
 
         try:
-            program = core.search(self.args)
+            program = caller.search(self.args)
         except: 
             pass
 
         if not program:
             caller.msg(f"Cannot find program: {self.args}")
 
-        if program and core:
-            if core.run_program(self.args):
+        if program:
+            if caller.run_program(self.args):
                 caller.msg(f"The core is now running: {self.args}.")
             else:
                 caller.msg(f"Core failed to run the program. Is it loaded?")
@@ -696,25 +669,22 @@ class CmdCoreKillProgram(Command):
 
     key = "core kill"
     aliases = []
-    locks = "cmd:all()"
+    locks = "cmd:false()"
     help_category = "aiCores and HardcodePrograms"
 
     def func(self):
         caller = self.caller
-        ship = self.caller.location
-        room = ship.location
-        core = ship.search("core")
 
         try:
-            program = core.search(self.args)
+            program = caller.search(self.args)
         except: 
             pass
 
         if not program:
             caller.msg(f"Cannot find program: {self.args}")
 
-        if program and core:
-            if core.kill_program(self.args):
+        if program:
+            if caller.kill_program(self.args):
                 caller.msg(f"The core killed: {self.args}.")
             else:
                 caller.msg(f"Core failed to kill the program. Is it running?")
@@ -729,17 +699,14 @@ class CmdCoreShowLoadedPrograms(Command):
 
     key = "core ls"
     aliases = []
-    locks = "cmd:all()"
+    locks = "cmd:false()"
     help_category = "aiCores and HardcodePrograms"
 
     def func(self):
         caller = self.caller
-        ship = self.caller.location
-        room = ship.location
-        core = ship.search("core")
 
-        caller.msg("The core beeps and dutifully provides the list of loaded programs.")
-        caller.msg(", ".join(program for program in core.loaded_programs))
+        caller.msg("List of HardcodePrograms:")
+        caller.msg(", ".join(program for program in caller.loaded_programs))
 
 class CmdCoreShowRunningPrograms(Command):
     """
@@ -751,17 +718,14 @@ class CmdCoreShowRunningPrograms(Command):
 
     key = "core ps"
     aliases = []
-    locks = "cmd:all()"
+    locks = "cmd:false()"
     help_category = "aiCores and HardcodePrograms"
 
     def func(self):
         caller = self.caller
-        ship = self.caller.location
-        room = ship.location
-        core = ship.search("core")
 
-        caller.msg("The core beeps and dutifully provides the list of running programs.")
-        caller.msg(", ".join(program for program in core.running_programs))
+        caller.msg("Running Programs:")
+        caller.msg(", ".join(program for program in caller.running_programs))
 
 class CmdCoreToggleNoisy(Command):
     """
@@ -773,16 +737,12 @@ class CmdCoreToggleNoisy(Command):
 
     key = "core noisy"
     aliases = []
-    locks = "cmd:all()"
+    locks = "cmd:false()"
     help_category = "aiCores and HardcodePrograms"
 
     def func(self):
         caller = self.caller
-        ship = self.caller.location
-        room = ship.location
-        core = ship.search("core")
-
-        core.noisy = not core.noisy
+        caller.noisy = not caller.noisy
 
 
 class CmdCoreShowDataStream(Command):
@@ -796,16 +756,13 @@ class CmdCoreShowDataStream(Command):
 
     key = "core datastream"
     aliases = []
-    locks = "cmd:all()"
+    locks = "cmd:false()"
     help_category = "aiCores and HardcodePrograms"
 
     def func(self):
         caller = self.caller
-        ship = self.caller.location
-        room = ship.location
-        core = ship.search("core")
-
-        caller.msg(core.view_data_stream())
+        caller.msg("|yDatastream of Connected Sensors:")
+        caller.msg(f"|b{caller.view_data_stream()}")
 
 class CmdCoreShowLogs(Command):
     """
@@ -817,16 +774,12 @@ class CmdCoreShowLogs(Command):
 
     key = "core logs"
     aliases = []
-    locks = "cmd:all()"
+    locks = "cmd:false()"
     help_category = "aiCores and HardcodePrograms"
 
     def func(self):
         caller = self.caller
-        ship = self.caller.location
-        room = ship.location
-        core = ship.search("core")
-
-        caller.msg("\n".join(core.logs[-10:]))
+        caller.msg("\n".join(caller.logs[-10:]))
 
 class CmdCoreShowLastError(Command):
     """
@@ -838,17 +791,14 @@ class CmdCoreShowLastError(Command):
 
     key = "core error"
     aliases = []
-    locks = "cmd:all()"
+    locks = "cmd:false()"
     help_category = "aiCores and HardcodePrograms"
 
     def func(self):
         caller = self.caller
-        ship = self.caller.location
-        room = ship.location
-        core = ship.search("core")
 
-        caller.msg("|yThe core beeps grumpily, spitting out the error.") 
-        caller.msg(core.last_error)
+        caller.msg("|yLast Core Simulation Loop Error Before Termination:") 
+        caller.msg(caller.last_error)
 
 class CmdCoreClearError(Command):
     """
@@ -860,21 +810,18 @@ class CmdCoreClearError(Command):
 
     key = "core clear error"
     aliases = []
-    locks = "cmd:all()"
+    locks = "cmd:false()"
     help_category = "aiCores and HardcodePrograms"
 
     def func(self):
         caller = self.caller
-        ship = self.caller.location
-        room = ship.location
-        core = ship.search("core")
 
-        core.clear_failure()
-        core.last_error = None
-        core.failure = False
-        core.reload()
+        caller.clear_failure()
+        caller.last_error = None
+        caller.failure = False
+        caller.reload()
 
-        caller.msg("The core beeps happily and starts simulating again.")
+        caller.msg("Core simulation loop started.")
 
 class CmdProgramEdit(Command):
     """

@@ -16,6 +16,7 @@ own cmdsets by inheriting from them or directly from `evennia.CmdSet`.
 
 from evennia import default_cmds
 from typeclasses.objects import CmdBootstrapSpaceroom, VehicleEntryCmdSet
+from commands.command import SignalUnloggedinLook
 
 
 class CharacterCmdSet(default_cmds.CharacterCmdSet):
@@ -34,7 +35,6 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.add(CmdBootstrapSpaceroom)
         #
         # any commands you add below will overload the default ones.
-        self.add(VehicleEntryCmdSet)
         super().at_cmdset_creation()
 
 
@@ -76,6 +76,7 @@ class UnloggedinCmdSet(default_cmds.UnloggedinCmdSet):
         #
         # any commands you add below will overload the default ones.
         #
+        self.add(SignalUnloggedinLook())
 
 
 class SessionCmdSet(default_cmds.SessionCmdSet):
