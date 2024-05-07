@@ -34,10 +34,8 @@ class Command(BaseCommand):
     #
 
     def at_post_cmd(self):
-        caller = self.caller
-
-        if hasattr(caller, "location") and caller.location.db.pilot != None:
-            self.caller.location.update_prompt(caller)
+        if hasattr(self.caller, "update_status"):
+            self.caller.update_status()
 
 
 # -------------------------------------------------------------

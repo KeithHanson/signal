@@ -48,10 +48,6 @@ class Hardcodable(Object, Simulatable):
 
         output = "%Facts from sensors.\n" + fact_section + "\n\n%User Hardcode\n" + program_section
 
-        if self.debugging:
-            self.logs.append("DEBUG: Full program and sensor facts:")
-            self.logs.append(output)
-
         return output
 
     def is_loaded(self, program_key):
@@ -133,18 +129,19 @@ class Hardcodable(Object, Simulatable):
         self.logs.append(f"Execution loop complete.")
         self.parse_clingo_symbols(model.symbols(shown=True))
 
+    def control_logger_callback(self, code, str):
+        self.msg("|rSimulation Log:")
+        self.msg(f"|y{code}")
+        self.msg(f"{str}")
+
     def parse_clingo_symbols(self, clingo_symbols):
         # This is where we will look for actual commands to fire.
-        if self.debugging: 
-            self.logs.append("Sensor data:")
-            self.logs.append(self.view_data_stream())
-
         self.logs.append(f"Received output from last loop: ")
         self.logs.append(f"{clingo_symbols}")
-        if self.noisy:
-            self.location.msg_contents("")
-            self.location.msg_contents(f"Simulation Truths: \n{clingo_symbols}")
 
+        if self.noisy:
+            self.msg("")
+            self.msg(f"Simulation Truths: \n{clingo_symbols}")
 
         for symbol in clingo_symbols:
             pattern = re.compile(r'command\("(.*?)"\)')
@@ -209,27 +206,41 @@ class HardcodeProgram(Object):
         EvEditor(caller, loadfunc=self.editor_load, savefunc=self.editor_save, quitfunc=self.editor_quit, key=self.key)
 
     def test_program(self, caller):
+        def control_logger_callback(code, str):
+            caller.msg("|rSimulation Log:")
+            caller.msg(f"|y{code}")
+            caller.msg(f"{str}")
+
         try:
-            ctl = clingo.Control()
+            ctl = clingo.Control(logger=control_logger_callback)
+
             core = caller
 
             if not core:
                 core.msg("A core must be nearby to test this program.")
                 return False
 
-            program = "\n".join([ sensor.to_fact() for sensor in core.sensors]) + self.hardcode_content
+            current_time = int(time.time())
+            prepend = f"currentTime({current_time}).\n" 
+            program = prepend + "\n".join([ sensor.to_fact() for sensor in core.sensors]) + self.hardcode_content
 
             ctl.add('base', [], program)
             ctl.ground([("base", [])])
             
             def on_clingo_model(model):
-                core.msg("|gThe program beeps softly to get your attention. The test is complete.")
+                core.msg(f"|gHardcode Program Test: '{self.key}")
+                core.msg("---------------")
                 core.msg(f"|b{program}")
                 for symbol in model.symbols(shown=True):
                     core.msg(f"|y{symbol}")
+
+                core.msg("---------------")
+                core.msg(f"|gProgram '{self.key}' Test End.")
+                core.msg("")
                 
             ctl.solve(on_model=on_clingo_model)
             ctl.cleanup()
         except RuntimeError as e:
-            core.msg(e.__cause__)
-            core.msg(traceback.format_exc())
+            pass
+            #core.msg(e.__cause__)
+            #core.msg(traceback.format_exc())

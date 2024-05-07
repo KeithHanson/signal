@@ -231,32 +231,6 @@ class CmdBootstrapSpaceroom(Command):
         dock.move_to(room1)
         room1.move_to(space_room)
 
-class CmdPilotLook(Command):
-    """
-    Refresh the prompt with all the stats about your vehicle.
-
-    Usage:
-        status
-    """
-
-    key = "status"
-    aliases = ["stats", "stat"]
-
-    locks = "cmd:all()"
-
-    help_category = "Piloting"
-
-    def parse(self):
-        if self.args.strip() == "":
-            self.target = self.caller.search("here")
-        else:
-            self.target = self.caller.search(self.args.strip())
-        pass
-
-    def func(self):
-        self.caller.msg(self.caller.location.at_desc(looker=self.caller))
-        pass
-
 class CmdPilotVehicle(COMMAND_DEFAULT_CLASS):
     """
     Begin piloting a vehicle.
@@ -382,7 +356,11 @@ class CmdPilotLaunch(Command):
             ship.newtonian_data["y"] = dock.location.newtonian_data["y"]
 
             ship.move_to(dock.exit_room)
-            ship.msg_contents("Your back gets pressed into your seat as the ship autopilotes out of the dock and into space.")
+            ship.msg_contents("|cLaunch procedure initiated...")
+            ship.msg_contents("|cLaunch procedure initiated... \t|g[OK]")
+            ship.msg_contents("|cEnsuring lane clear...")
+            ship.msg_contents("|cEnsuring lane clear... \t\t|g[OK]")
+            ship.msg_contents("|gLaunch procedure complete.")
 
         else:
             if isinstance(ship.location, SpaceRoom):
@@ -430,7 +408,14 @@ class CmdPilotDock(Command):
                 ship.newtonian_data["Vy"] = 0
 
                 ship.move_to(dock.location)
-                ship.msg_contents("You feel your ship tugged by the taxi mechanisms from the dock, placing your ship gently inside.")
+                ship.msg_contents("|cDocking procedure initiated...")
+                ship.msg_contents("|cDocking procedure initiated... \t|g[OK]")
+                ship.msg_contents("|cReserving docking pad... \t\t|g")
+                ship.msg_contents("|cReserving docking pad... \t|g[OK]")
+                ship.msg_contents("|cTether beam connecting...")
+                ship.msg_contents("|cTether beam connecting... \t|g[OK]")
+                ship.msg_contents("|cAttaching Harness...")
+                ship.msg_contents("|cAttaching Harness... \t\t|g[OK]")
                 ship.newtonian_data["wasMoving"] = False
                 return True
 
@@ -499,13 +484,13 @@ class CmdEngineThrust(Command):
         room = ship.location
 
         if not isinstance(room, SpaceRoom):
-            caller.msg("Pulsing your thrusters indoors would not be kind.")
+            caller.msg("|rError: Docked. Engine locked.")
         else:
             engine = caller.search("engine")
             if not engine:
-                caller.msg("Do you have an engine installed?")
+                caller.msg("|rCritical Panic: No engine.")
             else:
-                thrust_msg = "Your body feels the newtonian forces as the thrusters pulse and acceleration increases."
+                thrust_msg = "|GThrust applied."
 
                 notify_failure = False
 
@@ -535,13 +520,13 @@ class CmdEngineThrust(Command):
 
                 elif self.target == "reset":
                     if engine.thrust_reset():
-                        ship.msg_contents("Your stomache jumps a little as the thrusters forces subside and turn off.")
+                        ship.msg_contents("|GAll thrust reset.")
                     else:
                         notify_failure = True
 
                 elif self.target == "emergency_stop":
                     if engine.emergency_stop():
-                        ship.msg_contents("Your stomach wrenches as you come to a complete stop, flashing lights and warning sirens blaring.")
+                        ship.msg_contents("|rAll thrust and forces reset.")
                     else:
                         notify_failure = True
 
@@ -936,6 +921,15 @@ class CmdProgramTest(Command):
         if hasattr(target, "hardcode_content"):
             target.test_program(caller)
 
+class CmdLook(Command):
+    key = "look"
+    aliases = []
+    locks = "cmd:false()"
+    help_category = "aiCores and HardcodePrograms"
+
+    def func(self):
+        pass
+
 class CoreCmdSet(CmdSet):
     def at_cmdset_creation(self):
         self.add(CmdCoreReload)
@@ -956,6 +950,7 @@ class CoreCmdSet(CmdSet):
         self.add(CmdCoreToggleNoisy)
         self.add(CmdCoreLinkTo)
         self.add(CmdCoreShowProgram)
+        self.add(CmdLook)
 
 class RadarCmdSet(CmdSet):
     def at_cmdset_creation(self):
@@ -1019,7 +1014,8 @@ class SpaceRoom(DefaultRoom, Simulatable):
 
                 if vx > 0 or vx < 0 or vy > 0 or vy < 0:
                     entity.newtonian_data["wasMoving"] = True
-                    entity.msg_contents(f"You are moving. \n|rPos: {px},{py} |bVelocity: {vx},{vy} |gForce: {fx}, {fy}|n")
+                    if hasattr(entity, "aiCore"):
+                        entity.aiCore.update_status()
                 else:
                     if entity.newtonian_data["wasMoving"] == True:
                         entity.newtonian_data["wasMoving"] = False

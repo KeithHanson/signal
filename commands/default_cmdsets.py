@@ -79,6 +79,7 @@ class UnloggedinCmdSet(default_cmds.UnloggedinCmdSet):
         self.add(SignalUnloggedinLook())
 
 
+
 class SessionCmdSet(default_cmds.SessionCmdSet):
     """
     This cmdset is made available on Session level once logged in. It
@@ -98,4 +99,3 @@ class SessionCmdSet(default_cmds.SessionCmdSet):
         super().at_cmdset_creation()
         #
         # any commands you add below will overload the default ones.
-        #

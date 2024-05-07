@@ -69,13 +69,14 @@ class Vehicle(Object):
         self.cmdset.add("typeclasses.objects.VehiclePilotingCmdSet", persistent=True)
 
     def chained_power(self, subsys, powerOn):
-        if powerOn:
-            subsys.at_power_on()
-        else:
-            subsys.at_power_off()
+        if subsys:
+            if powerOn:
+                subsys.at_power_on()
+            else:
+                subsys.at_power_off()
 
-        for linked in subsys.linkedSubsystems:
-            self.chained_power(linked, powerOn)
+            for linked in subsys.linkedSubsystems:
+                self.chained_power(linked, powerOn)
 
     def at_power_on(self):
         self.powered = True
@@ -86,8 +87,6 @@ class Vehicle(Object):
 
     def at_power_off(self):
         self.powered = False
-        self.location.msg("As the vehicle powers off, it lands softly on the ground.")
-        self.aiCore.msg("You feel the vehicle land softly and watch as your subsystems power off.")
         self.chained_power(self.aiCore, False)
 
     def at_object_delete(self):

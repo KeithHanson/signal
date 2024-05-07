@@ -15,11 +15,14 @@ class Simulatable:
     def program(self):
         pass
 
+    def control_logger_callback(self, code, str):
+        pass
+
     def simulate(self):
         if self.program() != None:
             #print(f"Simulating: {self}")
             # create controller
-            ctl = clingo.Control()
+            ctl = clingo.Control(logger=self.control_logger_callback)
 
             # Add program
             ctl.add("base", [], self.program())
