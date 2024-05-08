@@ -18,7 +18,6 @@ from evennia import default_cmds
 from typeclasses.objects import CmdBootstrapSpaceroom, VehicleEntryCmdSet
 from commands.command import SignalUnloggedinLook
 
-
 class CharacterCmdSet(default_cmds.CharacterCmdSet):
     """
     The `CharacterCmdSet` contains general in-game commands like `look`,
@@ -36,9 +35,6 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         #
         # any commands you add below will overload the default ones.
         super().at_cmdset_creation()
-
-
-
 
 class AccountCmdSet(default_cmds.AccountCmdSet):
     """

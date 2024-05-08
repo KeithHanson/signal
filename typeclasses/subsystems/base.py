@@ -254,7 +254,7 @@ class DefaultCore(Subsystem, Hardcodable, Character):
     energyConsumedPerTickPerLevel = AttributeProperty(default=0)
     name = "Stock AI Core"
     HUDname = "core"
-    provides_cmdset_named = "typeclasses.objects.CoreCmdSet"
+    provides_cmdset_named = "commands.core.CoreCmdSet"
 
     def update_status(self):
         ship = self.location

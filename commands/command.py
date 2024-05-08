@@ -7,6 +7,7 @@ Commands describe the input the account can do to the game.
 
 from evennia.commands.default.muxcommand import MuxCommand as BaseCommand
 from evennia import syscmdkeys, default_cmds, Command
+from evennia.contrib.base_systems.unixcommand import UnixCommand
 
 
 # from evennia import default_cmds
