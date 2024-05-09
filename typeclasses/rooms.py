@@ -22,3 +22,7 @@ class Room(ObjectParent, DefaultRoom):
     """
 
     pass
+
+
+class VRRoom(Room):
+    pass

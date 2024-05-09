@@ -59,7 +59,7 @@ class Hardcodable(Object, Simulatable):
 
     def is_running(self, program_key):
         if program_key in self.running_programs:
-            return self.running_programs[program_key]
+            return True
         else:
             return False
 
@@ -98,10 +98,11 @@ class Hardcodable(Object, Simulatable):
         if possible_program:
             del self.running_programs[program_key]
             self.logs.append(f"Killed running program: {program_key}")
-        pass
 
-        # If it's NOT in running_programs, it's def dead?
-        return True
+            return True
+        else:
+            return False
+
 
     def unload_program(self, program_key):
         possible_program = self.is_loaded(program_key)

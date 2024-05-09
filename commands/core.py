@@ -10,30 +10,6 @@ class CoreUnixCommand(UnixCommand):
         if hasattr(self.caller, "update_status"):
             self.caller.update_status()
 
-def help_action_fixed(self, parser, namespace, values, option_string=None):
-    """If asked for help, display to the caller."""
-    if parser.command:
-        parser.command.obj.msg(parser.format_help().strip())
-        parser.exit(0, "")
-
-def print_usage_fixed(self, file=None):
-    """Print the usage to the caller.
-
-    Args:
-        file (file-object): not used here, the caller is used.
-
-    Note:
-        This method will override `argparse.ArgumentParser`'s in order
-        to not display the help on stdout or stderr, but to the
-        command's caller.
-
-    """
-    if self.command:
-        self.command.obj.msg(self.format_usage().strip())
-
-HelpAction.__call__ = help_action_fixed
-UnixCommandParser.print_usage = print_usage_fixed
-
 class CmdCoreLs(CoreUnixCommand):
 
     '''
@@ -207,7 +183,7 @@ class CmdCoreEditProgram(CoreUnixCommand):
             pass
 
         if not program:
-            program = create.create_object( "prolog.hardcodable.HardcodeProgram", key=self.opts.name )
+            program = create.create_object( "prolog.hardcodable.HardcodeProgram", key=self.opts.name, location=caller )
 
         if program:
             program.edit_program(caller)
@@ -280,7 +256,7 @@ class CmdCoreKillProgram(CoreUnixCommand):
             caller.msg(f"Cannot find program: {self.opts.name}")
 
         if program:
-            if caller.kill_program(self.args):
+            if caller.kill_program(self.opts.name):
                 caller.msg(f"The core killed: {self.opts.name}.")
             else:
                 caller.msg(f"Core failed to kill the program. Is it running?")

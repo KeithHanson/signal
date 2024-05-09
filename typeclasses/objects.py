@@ -1,3 +1,30 @@
+from evennia.contrib.base_systems.unixcommand.unixcommand import HelpAction, UnixCommandParser
+
+
+def help_action_fixed(self, parser, namespace, values, option_string=None):
+    """If asked for help, display to the caller."""
+    if parser.command:
+        parser.command.obj.msg(parser.format_help().strip())
+        parser.exit(0, "")
+
+def print_usage_fixed(self, file=None):
+    """Print the usage to the caller.
+
+    Args:
+        file (file-object): not used here, the caller is used.
+
+    Note:
+        This method will override `argparse.ArgumentParser`'s in order
+        to not display the help on stdout or stderr, but to the
+        command's caller.
+
+    """
+    if self.command:
+        self.command.obj.msg(self.format_usage().strip())
+
+HelpAction.__call__ = help_action_fixed
+UnixCommandParser.print_usage = print_usage_fixed
+
 """
 Object
 
