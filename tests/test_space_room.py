@@ -4,7 +4,7 @@ from unittest.mock import patch, MagicMock
 
 from typeclasses.vehicles.base import DefaultSpaceShip
 from typeclasses.objects import Object, SpaceRoom, SpaceRoomDock 
-from typeclasses.objects import CmdPilotLaunch, CmdPilotVehicle, CmdPilotLook, CmdPilotDock
+from typeclasses.objects import CmdPilotLaunch, CmdPilotVehicle, CmdPilotDock
 from prolog.hardcodable import HardcodeProgram
 
 class TestSpaceRoom(EvenniaCommandTest):
@@ -27,7 +27,9 @@ class TestSpaceRoom(EvenniaCommandTest):
 
         self.ship.move_to(self.room1)
         self.dock.move_to(self.room1)
-        self.char1.move_to(self.room1)
+        self.char1.move_to(self.ship)
+        self.ship.aiCore = self.char1
+        self.char1.link_to(self.char1.search("reactor"))
 
         self.call( cmdobj=CmdPilotVehicle(), input_args="ship")
 
@@ -78,8 +80,6 @@ class TestSpaceRoom(EvenniaCommandTest):
         self.assertEqual(self.room1.newtonian_data["x"], 20)
         self.assertEqual(self.room1.newtonian_data["y"], 20)
         self.assertEqual(self.room1.newtonian_data, self.ship.newtonian_data)
-
-        self.call(CmdPilotLook(), "")
 
     def test_spaceroom_dimensions(self):
         self.assertEqual(self.space_room.width, 1000)

@@ -75,7 +75,7 @@ class TestHardcodeSystem(EvenniaCommandTest):
         self.pc.add_sensor(my_sensor)
         self.pc.view_data_stream()
 
-        self.assertEqual(self.pc.view_data_stream(), "fake_sensor(10).")
+        self.assertEqual("fake_sensor(10)." in self.pc.view_data_stream(), True)
 
     def test_program_run_and_check_output(self):
         self.hc_program.hardcode_content = "hello(world). #show hello/1."

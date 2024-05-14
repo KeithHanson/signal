@@ -240,7 +240,7 @@ class DefaultEngine(Subsystem):
         return True
 
     def emergency_stop(self):
-        self.location.msg_contents("You feel your guts slam around as the emergency stop is performed, alarm sirens blaring.")
+        self.location.msg_contents("All forces have been reset. Forcibly. There may be some damage.")
         self.location.at_power_off()
 
         self.location.newtonian_data["Fx"] = 0

@@ -73,11 +73,11 @@ class Simulatable:
                         # Capture the stack trace
                         self.last_error = f"|rProgram failure. Clear error to continue.\n|rERROR MSG: {error_message}\n\n|yProgram follows:\n\n==========\n|y{self.program()}"
 
-                        print("!!!!!!!!!!!!!!!!!!!!!!!")
-                        print(self.last_error)
-                        print("^^^^^^^^^^^^^^^^^^^^^^^")
-                        traceback.print_exc()
-                        print("!!!!!!!!!!!!!!!!!!!!!!!")
+                        #print("!!!!!!!!!!!!!!!!!!!!!!!")
+                        #print(self.last_error)
+                        #print("^^^^^^^^^^^^^^^^^^^^^^^")
+                        #traceback.print_exc()
+                        #print("!!!!!!!!!!!!!!!!!!!!!!!")
 
 
                         self.failure = True

@@ -21,17 +21,20 @@ class TestSubsystems(EvenniaCommandTest):
         tickerhandler.remove = MagicMock(name='remove')
 
         self.default_vehicle = create.create_object( DefaultSpaceShip, key="ship" )
+        self.default_vehicle.aiCore = self.char2
+        self.char2.move_to(self.default_vehicle)
+
         self.default_vehicle.move_to(self.room1)
 
-        self.char1.move_to(self.room1)
 
         self.default_core = self.default_vehicle.aiCore
+        self.default_core.link_to(self.default_vehicle.search("reactor"))
         self.default_reactor = self.default_core.linkedSubsystems[0]
         self.default_battery = self.default_reactor.linkedSubsystems[0]
         self.default_engine = self.default_battery.linkedSubsystems[0]
         self.default_radar = self.default_battery.linkedSubsystems[1]
 
-        self.call( cmdobj=CmdPilotVehicle(), input_args="ship")
+        self.call( cmdobj=CmdPilotVehicle(), input_args="ship", caller=self.char2)
 
         self.space_room = create.create_object( SpaceRoom, key="space_room" )
 
@@ -46,6 +49,7 @@ class TestSubsystems(EvenniaCommandTest):
         self.room1.move_to(self.space_room)
 
     def test_default_reactor(self):
+        self.default_reactor.at_power_off()
         self.assertEqual( self.default_reactor.energyProvidedPerTick, 10 )
         self.assertEqual( self.default_reactor.assignedEnergyLevel, 0 )
         self.assertEqual( self.default_reactor.storedEnergy, 0 )
@@ -53,12 +57,18 @@ class TestSubsystems(EvenniaCommandTest):
     def test_default_reactor_energy_generation(self):
         # Hack some fuel in
         self.default_reactor.storedFuel = 100
+        # Other systems are draining each tick, so give it some time
+        self.default_reactor.at_tick()
+        self.default_reactor.at_tick()
+        self.default_reactor.at_tick()
+        self.default_reactor.at_tick()
+        self.default_reactor.at_tick()
         self.default_reactor.at_tick()
 
         self.assertEqual(self.default_reactor.storedEnergy, 10)
 
     def test_default_reactor_no_fuel(self):
-        self.call( cmdobj=CmdPowerOnVehicle(), input_args="")
+        self.call( cmdobj=CmdPowerOnVehicle(), input_args="", caller=self.char2)
         #power up
         self.default_reactor.storedFuel = 1
         self.assertEqual(self.default_reactor.powered, True)
@@ -77,7 +87,7 @@ class TestSubsystems(EvenniaCommandTest):
         self.assertEqual(self.default_battery.linkedSubsystems, [self.default_engine, self.default_radar])
 
     def test_linked_ticks(self):
-        self.call( cmdobj=CmdPowerOnVehicle(), input_args="")
+        self.call( cmdobj=CmdPowerOnVehicle(), input_args="", caller=self.char2)
 
         # simulate the ticks
         self.default_core.at_tick()
@@ -122,73 +132,73 @@ class TestSubsystems(EvenniaCommandTest):
 
     def test_radar(self):
         # for now, just make sure it doesn't fail
-        self.call(CmdPowerOnVehicle(), "")
-        self.call(CmdPilotLaunch(), "")
+        self.call(CmdPowerOnVehicle(), "", caller=self.char2)
+        self.call(CmdPilotLaunch(), "", caller=self.char2)
         self.run_normal_tick()
         self.run_normal_tick()
         self.run_normal_tick()
         self.run_normal_tick()
-        self.call( cmdobj=CmdRadarPulse(), input_args="" )
+        self.call( cmdobj=CmdRadarPulse(), input_args="" , caller=self.char2)
     
     def test_thrust_north(self):
-        self.call(CmdPowerOnVehicle(), "")
-        self.call(CmdPilotLaunch(), "")
+        self.call(CmdPowerOnVehicle(), "", caller=self.char2)
+        self.call(CmdPilotLaunch(), "", caller=self.char2)
         self.run_normal_tick()
         self.run_normal_tick()
         self.run_normal_tick()
         self.run_normal_tick()
 
-        self.call(CmdEngineThrust(), "n")
-        self.call(CmdEngineThrust(), "e")
-        self.call(CmdRadarPulse(), input_args="" )
-
-        time.sleep(1)
-        self.run_normal_tick()
-        self.call(CmdEngineThrust(), "w")
-        self.call(CmdRadarPulse(), input_args="" )
-
-        time.sleep(1)
-        self.call(CmdEngineThrust(), "w")
-        self.run_normal_tick()
-        self.call(CmdRadarPulse(), input_args="" )
-
-        time.sleep(1)
-        self.call(CmdEngineThrust(), "e")
-        self.run_normal_tick()
-        self.call(CmdRadarPulse(), input_args="" )
-
-        self.call(CmdEngineThrust(), "s")
-        self.call(CmdEngineThrust(), "s")
-        self.call(CmdRadarPulse(), input_args="" )
+        self.call(CmdEngineThrust(), "n", caller=self.char2)
+        self.call(CmdEngineThrust(), "e", caller=self.char2)
+        self.call(CmdRadarPulse(), input_args="" , caller=self.char2)
 
         time.sleep(1)
         self.run_normal_tick()
-        self.call(CmdRadarPulse(), input_args="" )
+        self.call(CmdEngineThrust(), "w", caller=self.char2)
+        self.call(CmdRadarPulse(), input_args="" , caller=self.char2)
+
+        time.sleep(1)
+        self.call(CmdEngineThrust(), "w", caller=self.char2)
+        self.run_normal_tick()
+        self.call(CmdRadarPulse(), input_args="" , caller=self.char2)
+
+        time.sleep(1)
+        self.call(CmdEngineThrust(), "e", caller=self.char2)
+        self.run_normal_tick()
+        self.call(CmdRadarPulse(), input_args="" , caller=self.char2)
+
+        self.call(CmdEngineThrust(), "s", caller=self.char2)
+        self.call(CmdEngineThrust(), "s", caller=self.char2)
+        self.call(CmdRadarPulse(), input_args="" , caller=self.char2)
 
         time.sleep(1)
         self.run_normal_tick()
-        self.call(CmdRadarPulse(), input_args="" )
+        self.call(CmdRadarPulse(), input_args="" , caller=self.char2)
+
+        time.sleep(1)
+        self.run_normal_tick()
+        self.call(CmdRadarPulse(), input_args="" , caller=self.char2)
 
         time.sleep(1)
         self.run_normal_tick()
         
-        self.call(CmdRadarPulse(), input_args="" )
+        self.call(CmdRadarPulse(), input_args="" , caller=self.char2)
 
         time.sleep(1)
         self.run_normal_tick()
-        self.call(CmdRadarPulse(), input_args="" )
+        self.call(CmdRadarPulse(), input_args="" , caller=self.char2)
 
         time.sleep(1)
         self.run_normal_tick()
-        self.call(CmdRadarPulse(), input_args="" )
+        self.call(CmdRadarPulse(), input_args="" , caller=self.char2)
 
         time.sleep(1)
         self.run_normal_tick()
-        self.call(CmdRadarPulse(), input_args="" )
+        self.call(CmdRadarPulse(), input_args="" , caller=self.char2)
 
         time.sleep(1)
         self.run_normal_tick()
-        self.call(CmdRadarPulse(), input_args="" )
+        self.call(CmdRadarPulse(), input_args="" , caller=self.char2)
 
     def items_length(self, incoming_dict):
         return len(list(incoming_dict.items()))
@@ -215,8 +225,8 @@ class TestSubsystems(EvenniaCommandTest):
 
         self.assertEqual(len(core.sensors) > 0, True)
 
-        self.call(CmdPilotLaunch(), "")
-        print(self.call(CmdEngineThrust(), "n"))
+        self.call(CmdPilotLaunch(), "", caller=self.char2)
+        print(self.call(CmdEngineThrust(), "n", caller=self.char2 ))
         self.run_normal_tick()
         self.run_normal_tick()
         self.run_normal_tick()
