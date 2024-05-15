@@ -28,7 +28,25 @@ class Hardcodable(Object, Simulatable):
 
     debugging = NAttributeProperty(default=False)
 
+    registry = NAttributeProperty(default=[None, None, None, None])
+
+    registryToggles = NAttributeProperty(default=[True, True, True, True])
+
     noisy = False
+
+    def set_registry(self, slot, fact):
+        self.registry[slot] = fact
+        return True
+
+    def get_registry(self, slot):
+        if self.registryToggles[slot]:
+            return self.registry[slot]
+        else:
+            return None
+
+    def toggle_registry(self, slot):
+        self.registryToggles[slot] = not self.registryToggles[slot]
+        return True
 
     def to_fact(self):
         return ""
@@ -37,12 +55,28 @@ class Hardcodable(Object, Simulatable):
         self.track(self)
         return True
 
+    def compile_registry(self):
+        registers_to_include = []
+        for index, register in enumerate(self.registry):
+            if self.registryToggles[index] and register:
+                registers_to_include.append(register)
+
+        registry_section = "%Facts from the registry\n\n" + "\n".join(registers_to_include)
+
+        return registry_section
+
+    def compile_sensor_facts(self):
+        return "%Facts from Sensors\n\n" + "\n".join([ sensor.to_fact() for sensor in self.sensors])
+
     def program(self):
         # Gather terms from all the sensors, these are our facts.
         current_time = int(time.time())
-        prepend = f"currentTime({current_time}).\n" 
+        prepend = f"currentTime({current_time}).\n\n" 
 
-        fact_section = prepend + "\n".join([ sensor.to_fact() for sensor in self.sensors])
+        registry_section = self.compile_registry()
+
+        fact_section = prepend + registry_section + "\n\n" + self.compile_sensor_facts()
+
         # Inject the running programs beneath the sensor data
         program_section = "\n".join([ program.to_fact() for _, program in self.running_programs.items()])
 
@@ -131,9 +165,11 @@ class Hardcodable(Object, Simulatable):
         self.parse_clingo_symbols(model.symbols(shown=True))
 
     def control_logger_callback(self, code, str):
-        self.msg("|rSimulation Log:")
-        self.msg(f"|y{code}")
-        self.msg(f"{str}")
+        error_string = f"|rSimulation Log:\n|y{code}\n{str}"
+        self.msg(error_string)
+
+        self.failure = True
+        self.last_error = error_string
 
     def parse_clingo_symbols(self, clingo_symbols):
         # This is where we will look for actual commands to fire.
@@ -171,14 +207,7 @@ class Hardcodable(Object, Simulatable):
 
     def view_data_stream(self):
         # This prints out the clingo symbols defining the snapshot of information the Hardcodable has access to
-        output = []
-        for sensor in self.sensors:
-            if hasattr(sensor, "to_fact") and sensor.to_fact() != None:
-                output.append(sensor.to_fact())
-
-        current_time = int(time.time())
-        prepend = f"currentTime({current_time}).\n" 
-        return prepend + "\n".join(output)
+        return self.program()
 
     def execute_command(self, command):
         # this attempts to execute a real evennia mud command as the player
@@ -206,11 +235,13 @@ class HardcodeProgram(Object):
     def edit_program(self, caller):
         EvEditor(caller, loadfunc=self.editor_load, savefunc=self.editor_save, quitfunc=self.editor_quit, key=self.key)
 
+    def one_shot(self, caller):
+        pass
+
     def test_program(self, caller):
         def control_logger_callback(code, str):
-            caller.msg("|rSimulation Log:")
-            caller.msg(f"|y{code}")
-            caller.msg(f"{str}")
+            error_string = "|rSimulation Log:\n|y{code}\n{str}"
+            caller.msg(error_string)
 
         try:
             ctl = clingo.Control(logger=control_logger_callback)
@@ -223,7 +254,8 @@ class HardcodeProgram(Object):
 
             current_time = int(time.time())
             prepend = f"currentTime({current_time}).\n" 
-            program = prepend + "\n".join([ sensor.to_fact() for sensor in core.sensors]) + self.hardcode_content
+
+            program = prepend + core.compile_registry() + "\n\n" + core.compile_sensor_facts() + self.hardcode_content
 
             ctl.add('base', [], program)
             ctl.ground([("base", [])])
@@ -245,3 +277,6 @@ class HardcodeProgram(Object):
             pass
             #core.msg(e.__cause__)
             #core.msg(traceback.format_exc())
+
+
+

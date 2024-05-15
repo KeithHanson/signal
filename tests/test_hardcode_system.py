@@ -121,3 +121,18 @@ class TestHardcodeSystem(EvenniaCommandTest):
 
         self.assertEqual("ERROR MSG:" in self.pc.last_error , True)
         self.assertEqual(f"|rProgram failure. Clear error to continue." in self.pc.last_error, True)
+
+    def test_registry_fact_setting_and_retrieving(self):
+        self.assertEqual(self.pc.set_registry(1, "maxVelocity(1)."), True)
+
+        self.assertEqual(self.pc.get_registry(1), "maxVelocity(1).")
+
+        self.assertEqual("maxVelocity(1)." in self.pc.program(), True)
+
+        self.assertEqual(self.pc.toggle_registry(1), True)
+
+        self.assertEqual(self.pc.get_registry(1), None)
+
+        self.assertEqual(self.pc.toggle_registry(1), True)
+
+        self.assertEqual(self.pc.get_registry(1), "maxVelocity(1).")

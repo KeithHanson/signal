@@ -19,6 +19,9 @@ class Simulatable:
         pass
 
     def simulate(self):
+        if self.failure:
+            return False
+
         if self.program() != None:
             #print(f"Simulating: {self}")
             # create controller
@@ -55,7 +58,7 @@ class Simulatable:
 
         if self.simulation_thread == None and not self.failure:
             def simulation_loop():
-                while True:
+                while not self.failure:
                     try:
                         start_time = time.time()
 

@@ -458,7 +458,47 @@ class CmdCoreLinkTo(CoreUnixCommand):
             if subsystem.link_to(other_subsystem):
                 caller.msg(f"{subsystem} linked to {other_subsystem} successfully")
 
+class CmdCoreRegistry(CoreUnixCommand):
+    """
+    Set a register slot to a fact. Use --toggle to turn it on or off. Use registry slot to unset a register.
 
+    Usage:
+        registry slot fact --toggle
+
+    Example:
+        Set the register slot 0 to low speed, register 1 to faster, toggle the faster speed off. 
+        Later, toggle low speed off, and high speed on. 
+        Later, delete slot 0 register.
+
+        registry 0 "max_velocity(1)."
+        registry 1 "max_velocity(10)."
+        registry 1 --toggle
+
+        registry 0 --toggle 
+        registry 1 --toggle
+
+        registry 0
+    """
+    key = "registry"
+    aliases = []
+    locks = "cmd:false()"
+    help_category = "Core Binaries"
+
+    def init_parser(self):
+        self.parser.add_argument("slot", help="Set which slot for this command. Starts at 0.")
+        self.parser.add_argument("--fact", "-f", required=False, help="Set the fact to set in the register. There is no error checking, and it will be injected into the simulation as soon as it is set.")
+        self.parser.add_argument("--toggle", action="store_true", help="Ignores anything else and toggles the slot setting.")
+
+    def func(self):
+        if self.opts.toggle:
+            self.caller.toggle_registry(int(self.opts.slot))
+            return True
+
+        if self.opts.slot and self.opts.fact:
+            return self.caller.set_registry(int(self.opts.slot), self.opts.fact)
+
+        if self.opts.slot and not self.opts.fact:
+            return self.caller.set_registry(int(self.opts.slot), None)
 
 class CoreCmdSet(CmdSet):
     def at_cmdset_creation(self):
@@ -478,3 +518,4 @@ class CoreCmdSet(CmdSet):
         self.add(CmdCoreShowProgram)
         self.add(CmdCoreLs)
         self.add(CmdCoreEditProgram)
+        self.add(CmdCoreRegistry)
