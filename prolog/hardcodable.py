@@ -9,6 +9,7 @@ from typeclasses.objects import Object
 from prolog.simulatable import Simulatable
 import re
 from evennia.utils.eveditor import EvEditor
+from evennia.utils.evtable import EvTable
 import traceback
 
 
@@ -28,9 +29,9 @@ class Hardcodable(Object, Simulatable):
 
     debugging = NAttributeProperty(default=False)
 
-    registry = NAttributeProperty(default=[None, None, None, None])
+    registry = NAttributeProperty(default=[None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None])
 
-    registryToggles = NAttributeProperty(default=[True, True, True, True])
+    registryToggles = NAttributeProperty(default=[True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True])
 
     noisy = False
 
@@ -64,6 +65,13 @@ class Hardcodable(Object, Simulatable):
         registry_section = "%Facts from the registry\n\n" + "\n".join(registers_to_include)
 
         return registry_section
+
+    def show_registry(self):
+        slots = list(range(len(self.registry)))
+        facts = [fact for fact in self.registry]
+        toggles = ["Yes" if toggle else "No" for toggle in self.registryToggles]
+        table = EvTable("regSlot", "On?", "Fact", table=[slots, toggles, facts], border="cells")
+        return table
 
     def compile_sensor_facts(self):
         return "%Facts from Sensors\n\n" + "\n".join([ sensor.to_fact() for sensor in self.sensors])

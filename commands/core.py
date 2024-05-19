@@ -492,13 +492,32 @@ class CmdCoreRegistry(CoreUnixCommand):
     def func(self):
         if self.opts.toggle:
             self.caller.toggle_registry(int(self.opts.slot))
+            self.caller.msg(f"Registry slot {self.opts.slot} toggled.")
             return True
 
         if self.opts.slot and self.opts.fact:
-            return self.caller.set_registry(int(self.opts.slot), self.opts.fact)
+            self.caller.set_registry(int(self.opts.slot), self.opts.fact)
+            self.caller.msg(f"Registry slot {self.opts.slot} fact set to: '{self.opts.fact}'")
+            return True
 
         if self.opts.slot and not self.opts.fact:
-            return self.caller.set_registry(int(self.opts.slot), None)
+            self.caller.set_registry(int(self.opts.slot), None)
+            self.caller.msg(f"Registry slot {self.opts.slot} cleared.")
+            return True
+
+class CmdCoreShowRegistries(CoreUnixCommand):
+    """
+    Show all registry facts and toggles.
+    """
+
+    key = "registries"
+    aliases = []
+    locks = "cmd:false()"
+    help_category = "Core Binaries"
+
+    def func(self):
+        caller = self.caller
+        self.caller.msg(caller.show_registry())
 
 class CoreCmdSet(CmdSet):
     def at_cmdset_creation(self):
@@ -519,3 +538,4 @@ class CoreCmdSet(CmdSet):
         self.add(CmdCoreLs)
         self.add(CmdCoreEditProgram)
         self.add(CmdCoreRegistry)
+        self.add(CmdCoreShowRegistries)
