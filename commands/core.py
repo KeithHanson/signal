@@ -11,7 +11,6 @@ class CoreUnixCommand(UnixCommand):
             self.caller.update_status()
 
 class CmdCoreLs(CoreUnixCommand):
-
     '''
     List all objects available to your core. Mostly used to list your HardcodePrograms.
 
