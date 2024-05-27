@@ -296,30 +296,6 @@ class CmdPilotVehicle(COMMAND_DEFAULT_CLASS):
                 caller.msg("Hm... can't pilot that.")
 
 
-class CmdDisembarkVehicle(Command):
-    """
-    Exit the vehicle you are in.
-
-    Usage:
-        disembark
-
-    Get out of the vehicle, exiting into the location of the vehicle itself.
-    """
-
-    key = "disembark"
-    aliases = ["get out", "leave", "exit"]
-    locks = "cmd:all()"
-    help_category = "Piloting"
-
-    def parse(self):
-        pass
-
-    def func(self):
-        caller = self.caller
-        ship = caller.location
-
-        ship.at_pilot_exit(caller)
-
 class CmdPowerOnVehicle(Command):
     """
     Power up the vehicle.
@@ -570,7 +546,6 @@ class EngineCmdSet(CmdSet):
 
 class VehiclePilotingCmdSet(CmdSet):
     def at_cmdset_creation(self):
-        self.add(CmdDisembarkVehicle())
         self.add(CmdPowerOnVehicle())
         self.add(CmdPowerOffVehicle())
         self.add(CmdPilotLaunch())
